@@ -1,0 +1,46 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/package-solution.schema.json",
+  "solution": {
+    "name": "SRSC - Reserva de salas de reuniones corporativas",
+    "id": "b7c562f4-c8f0-4ffe-9b5c-48cdebe5f618",
+    "version": "1.1.1.3",
+    "includeClientSideAssets": true,
+    "skipFeatureDeployment": true,
+    "isDomainIsolated": false,
+    "webApiPermissionRequests": [
+      {
+        "resource": "Microsoft Graph",
+        "scope": "User.Read.All"
+      }
+    ],
+    "developer": {
+      "name": "",
+      "websiteUrl": "",
+      "privacyUrl": "",
+      "termsOfUseUrl": "",
+      "mpnId": "Undefined-1.19.0"
+    },
+    "metadata": {
+      "shortDescription": {
+        "default": "SRSC description"
+      },
+      "longDescription": {
+        "default": "SRSC description"
+      },
+      "screenshotPaths": [],
+      "videoUrl": "",
+      "categories": []
+    },
+    "features": [
+      {
+        "title": "srsc Feature",
+        "description": "Caracteristica que habilita el web part SRSC",
+        "id": "7cc4593e-7ce5-459e-a4e3-449b513f0328",
+        "version": "1.0.0.0"
+      }
+    ]
+  },
+  "paths": {
+    "zippedPackage": "solution/srsc.sppkg"
+  }
+}

@@ -1,0 +1,238 @@
+import * as React from 'react';
+import styles from '../components/Srsc.module.scss';
+import { ISrscProps } from './ISrscProps';
+import SPFxContext from '../contexts/SPFxContext';
+import {useAuth} from '../contexts/AuthContext';
+import * as strings from 'SrscWebPartStrings';
+
+// Import the new view components
+import ReservaSala from './views/ReservaSala';
+import SalasDisponibles from './views/SalasDisponibles';
+import BloqueoSala from './views/BloqueoSala';
+import GenerarQR from './views/GenerarQR';
+import Reportes from './views/Reportes';
+import MantenedorHorarios from './views/MantenedorHorarios';
+import MantenedorUsuarios from './views/MantenedorUsuarios';
+import MantenedorSalas from './views/MantenedorSalas';
+import MantenedorPisos from './views/MantenedorPisos'; // New import
+import MantenedorVicepresidencias from './views/MantenedorVicepresidencias'; // New import
+import MantenedorGerencia from './views/MantenedorGerencia'; // New import
+import MantenedorDivisiones from './views/MantenedorDivisiones';
+import { APP_VERSION } from '../utils/utils';
+import { Icon } from '@fluentui/react';
+//import { DialogFooter } from '@fluentui/react';
+
+// Define a type for menu items that can have sub-items
+interface MenuItem {
+  key: string;
+  text: string;
+  view?: string; // The view to render if it's a direct link
+  icon?: string; // Optional icon class for the menu item
+  subItems?: MenuItem[]; // Sub-items for a dropdown menu
+}
+
+const menuItems: MenuItem[] = [
+  { key: 'reservaSala', text: strings.ReservaSalaView, view: strings.ReservaSalaView,  icon :'fa-solid fa-calendar-check'},
+  { key: 'salasDisponibles', text: strings.SalasDisponiblesView, view: strings.SalasDisponiblesView, icon: 'fa-solid fa-chair' },//fa-building
+  { key: 'bloqueoSala', text: strings.BloqueoSalaView, view: strings.BloqueoSalaView , icon: 'fa-solid fa-user-lock' }, //fa-user-lock
+  { key: 'generarQR', text: strings.GenerarQRView, view: strings.GenerarQRView, icon: 'fa-solid fa-qrcode' },
+  { key: 'reportes', text: strings.ReportesView, view: strings.ReportesView, icon: 'fa-solid fa-chart-bar' },
+  {
+    key: 'mantenedores',
+    text: strings.MantenedorView, icon: 'fa-solid fa-tools',
+    subItems: [
+      { key: 'mantenedorDivisiones', text: strings.MantenedorDivisionesView, view: strings.MantenedorDivisionesView },
+      { key: 'mantenedorPisos', text: strings.MantenedorPisosView, view: strings.MantenedorPisosView }, // New item
+      { key: 'mantenedorSalas', text: strings.MantenedorSalasView, view: strings.MantenedorSalasView },
+      { key: 'mantenedorHorarios', text: strings.MantenedorHorariosView, view: strings.MantenedorHorariosView },
+      { key: 'mantenedorVicepresidencias', text: strings.MantenedorVicepresidenciasView, view: strings.MantenedorVicepresidenciasView }, // New item
+      { key: 'mantenedorGerencia', text: strings.MantenedorGerenciaView, view: strings.MantenedorGerenciaView }, // New item
+      { key: 'mantenedorUsuarios', text: strings.MantenedorUsuariosView, view: strings.MantenedorUsuariosView },
+      { key: 'version', text: 'V. ' + APP_VERSION, view: '' },
+    ],
+  },
+];
+
+// The View type will now be derived from all possible 'view' properties in menuItems
+type View =
+  typeof strings.ReservaSalaView |
+  typeof strings.SalasDisponiblesView |
+  typeof strings.BloqueoSalaView |
+  typeof strings.GenerarQRView |
+  typeof strings.ReportesView |
+  typeof strings.MantenedorPisosView | // New view type
+  typeof strings.MantenedorHorariosView |
+  typeof strings.MantenedorUsuariosView |
+  typeof strings.MantenedorSalasView |
+  typeof strings.MantenedorDivisionesView |
+  typeof strings.MantenedorVicepresidenciasView; // New view type
+
+const Srsc: React.FC<ISrscProps> = (props) => {
+  const [currentView, setCurrentView] = React.useState<View>(menuItems[0].view as View); // Initialize with the first item's view
+  const [isMantenedoresOpen, setIsMantenedoresOpen] = React.useState<boolean>(false);
+
+  const renderView = (): JSX.Element => {
+    switch (currentView) {
+      case strings.ReservaSalaView:
+        return <ReservaSala />;
+      case strings.SalasDisponiblesView:
+        return <SalasDisponibles />;
+      case strings.BloqueoSalaView:
+        return <BloqueoSala />;
+      case strings.GenerarQRView:
+        return <GenerarQR />;
+      case strings.ReportesView:
+        return <Reportes />;
+      case strings.MantenedorPisosView: // New case
+        return <MantenedorPisos />;
+      case strings.MantenedorHorariosView:
+        return <MantenedorHorarios />;
+      case strings.MantenedorUsuariosView:
+        return <MantenedorUsuarios />;
+      case strings.MantenedorSalasView:
+        return <MantenedorSalas />;
+      case strings.MantenedorVicepresidenciasView: // New case
+        return <MantenedorVicepresidencias />;
+      case strings.MantenedorGerenciaView: // New case
+        return <MantenedorGerencia />;
+      case strings.MantenedorDivisionesView:
+        return <MantenedorDivisiones />;
+      default:
+        // Fallback to a default view if currentView is somehow not in menuItems
+        // This case should ideally not be reached with proper type handling
+        return <ReservaSala />;
+    }
+  };
+
+  const { isAdmin, isUserValido } = useAuth();
+
+  const onItemClick = (item: View): void => {
+  // Si el usuario hace clic en 'version', simplemente retornamos y no hacemos nada
+  if (item && item === 'version') {
+    //ev?.preventDefault(); // Evita cualquier comportamiento por defecto
+    return; 
+  }
+
+  // Si no es la versión, cambiamos la vista normalmente
+  if (item && item) {
+    setCurrentView(item);
+  }
+  };
+
+  return (
+    <SPFxContext.Provider value={props.context}>
+    {isUserValido && (
+      <div className={styles.srsc}>
+        <div className={styles.srsc}>
+            <div className={styles.userSection}>
+            <span className={styles.userName}>
+              👤 {props.userDisplayName}
+            </span>
+          </div>
+
+          {/* Sección Central: Título */}
+          <div className={styles.titleSection}>
+            <img src='https://codelcochile.sharepoint.com/sites/srsc/SiteAssets/logoCodelco.png' alt="Logo" className={styles.logo} />
+            <h1 className={styles.mainTitle}>Reserva Salas Corporativa</h1>
+          </div>
+          
+          {/* Sección Derecha: Espaciador para mantener el equilibrio del centro */}
+          <div className={styles.spacer}></div>
+        </div>
+        
+
+        <header className={styles.appHeader}>
+          <nav className={styles.appNav}> 
+              {menuItems.map(item => {
+                if (item.subItems && isAdmin) {
+                  return (
+                    <div key={item.key} className={styles.dropdown}>
+                      <button
+                        className={`${styles.navButton} ${isMantenedoresOpen ? styles.active : ''}`}
+                        onClick={() => setIsMantenedoresOpen(!isMantenedoresOpen)}
+                      >
+                        {item.icon && (
+                          item.icon.indexOf('fa-') > -1 ? (
+                            <i className={item.icon} style={{ marginRight: '8px' }}></i>
+                          ) : (
+                            <Icon iconName={item.icon} style={{ marginRight: '8px' }} />
+                          )
+                        )}
+                        {item.text}
+                      </button>
+                      {isMantenedoresOpen &&  isAdmin &&(
+                        <div className={styles.dropdownContent}>
+                          {item.subItems.map(subItem => (
+                            <button
+                              key={subItem.key}
+                              className={`${styles.navButton} ${currentView === subItem.view ? styles.active : ''}`}
+                              onClick={() => {
+                                onItemClick(subItem.view as View);// setCurrentView(subItem.view as View);
+                                setIsMantenedoresOpen(false); // Close dropdown after selection
+                              }}
+                            >
+                              {subItem.text}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                } else {
+                  return (
+                    <button
+                      key={item.key}
+                      className={`${styles.navButton} ${currentView === item.view ? styles.active : ''}`}
+                      onClick={() => onItemClick(item.view as View)}//setCurrentView(item.view as View)}
+                    >
+                      
+                        {item.icon && (
+                          item.icon.indexOf('fa-') > -1 ? (
+                            <i className={item.icon} style={{ marginRight: '8px' }}></i>
+                          ) : (
+                            <Icon iconName={item.icon} style={{ marginRight: '8px' }} />
+                          )
+                        )}
+
+                      {item.text}
+                    </button>
+                  );
+                }
+              })} 
+          </nav>
+        </header>
+        <main className={styles.appMain}>
+          <div className={styles.viewContent}>
+            {renderView()}
+          </div>
+        </main>
+      </div>
+      ) }
+      {!isUserValido && (
+        <div className={styles.srsc}> 
+          <div className={styles.srsc}>
+              <div className={styles.userSection}>
+              <span className={styles.userName}>
+                👤 {props.userDisplayName}
+              </span>
+            </div>
+
+            {/* Sección Central: Título */}
+            <div className={styles.titleSection}>
+              <h1 className={styles.mainTitle}>Reserva Salas Corporativa</h1>
+            </div>
+            
+            {/* Sección Derecha: Espaciador para mantener el equilibrio del centro */}
+            <div className={styles.spacer}></div>
+          </div>
+          <div className={styles.titleSection}>
+              <h1 className={styles.mainTitle}>El usuario no esta correctamente configurado</h1>
+          </div>
+        </div>
+      )}
+    </SPFxContext.Provider>
+  
+  );
+};
+
+export default Srsc;

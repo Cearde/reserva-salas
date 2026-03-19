@@ -1,0 +1,76 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 10px; /* Add padding for small screens */
+}
+
+.dialog {
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 20px;
+  width: 90vw; /* Use viewport width */
+  max-width: 320px; /* Set a max-width for larger screens */
+  box-sizing: border-box;
+}
+
+.roomName {
+  color: #666;
+  margin-bottom: 10px;
+  font-size: 16px;
+}
+
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 60vh; /* Prevent list from being too long */
+  overflow-y: auto;
+}
+
+.item {
+  padding: 10px;
+  margin-bottom: 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  background: #f4f6f8;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background: #e2f0ff;
+  }
+}
+
+.disabled {
+  background: #eee;
+  color: #999;
+  cursor: not-allowed;
+}
+
+.reserved {
+  font-size: 11px;
+  color: #d9534f;
+}
+
+.closeBtn {
+  margin-top: 15px;
+  width: 100%;
+}
+
+/* Media query for very small devices */
+@media (max-width: 320px) {
+  .dialog {
+    padding: 15px;
+  }
+  .item {
+    padding: 8px;
+    font-size: 14px;
+  }
+}

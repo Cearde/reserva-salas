@@ -1,0 +1,21 @@
+{
+  "@microsoft/generator-sharepoint": {
+    "plusBeta": false,
+    "isCreatingSolution": true,
+    "nodeVersion": "22.17.1",
+    "sdksVersions": {
+      "@microsoft/microsoft-graph-client": "3.0.2",
+      "@microsoft/teams-js": "2.12.0"
+    },
+    "version": "1.19.0",
+    "libraryName": "srsc",
+    "libraryId": "b7c562f4-c8f0-4ffe-9b5c-48cdebe5f618",
+    "environment": "spo",
+    "packageManager": "npm",
+    "solutionName": "SRSC",
+    "solutionShortDescription": "SRSC description",
+    "skipFeatureDeployment": true,
+    "isDomainIsolated": false,
+    "componentType": "webpart"
+  }
+}

@@ -1,0 +1,619 @@
+/* 
+  Corporate Colors:
+  - Primary Orange/Yellow: #F4AA00
+  - Primary Orange/Red: #E55302
+  - Primary Teal: #0098AA
+  - Primary Red: #C13832
+*/
+
+.appWrapper {
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  width: 90vw; /* Use viewport width for responsiveness */
+  max-width: 400px; /* Keep a max-width for larger screens */
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.planContainer {
+  position: relative;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.planImage {
+  width: 100%;
+  display: block;
+  border: 1px solid #ccc;
+}
+
+.roomButton {
+  position: absolute;
+  top: 40%;
+  left: 55%;
+  transform: translate(-50%, -50%);
+  padding: 8px 14px;
+  background-color: rgba(23, 162, 184, 0.85);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.roomButton:hover {
+  background-color: rgba(23, 162, 184, 1);
+}
+
+.srsc {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  color: #333;
+  margin: 0 auto;
+  padding: 0; /* Remove padding, handled by appWrapper or appMain */
+  max-width: 1500px; /* Add max-width to the main container */
+}
+
+.appHeader {
+  background-color: #0098AA; /* Primary Teal */
+  //padding: 0 5px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  width: 100%; /* Make header full width */
+}
+
+.appNav {
+  display: flex;
+  flex-wrap: wrap; /* Allow buttons to wrap on smaller screens */
+  justify-content: flex-start;
+}
+
+.navButton {
+  padding: 15px 20px;
+  border: none;
+  background-color: transparent;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  position: relative;
+  transition: background-color 0.3s ease;
+  text-align: center;
+  flex-grow: 1; /* Allow buttons to grow on smaller screens */
+}
+
+.navButton:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.navButton.active {
+  font-weight: bold;
+  background-color: #F4AA00; /* Primary Orange/Yellow */
+  color: #000;
+}
+
+.appMain {
+  padding-top: 20px;
+  width: 100%; /* Make main content full width */
+  box-sizing: border-box;
+}
+
+.viewContent {
+  background-color: #fff;
+  padding: 25px;
+  border-radius: 8px;
+  //box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 6px rgba(0, 152, 170, 0.50);
+}
+
+.viewContent h2 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 24px;
+  color: #333;
+  border-bottom: 2px solid #808080;
+  padding-bottom: 10px;
+}
+
+.viewContent p {
+  font-size: 15px;
+  line-height: 1.6;
+  color: #555;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.formGroup {
+  margin-bottom: 15px;
+  min-width: 220px;
+  flex-grow: 1;
+}
+
+.formGroup label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 600;
+  color: #444;
+}
+
+.formGroup input,
+.formGroup select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.submitButton {
+  margin-top: 10px;
+  background-color: #0098AA;
+  color: white;
+  border: none;
+  padding: 12px 25px;
+  font-size: 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.submitButton:hover {
+  background-color: #007b8a;
+}
+
+.submitButton:disabled {
+  background-color: #a0a0a0;
+  cursor: not-allowed;
+}
+
+.qrCodePlaceholder {
+  margin-top: 25px;
+  width: 100%;
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f5f5f5;
+  border: 2px dashed #ccc;
+  border-radius: 4px;
+}
+
+.qrCodePlaceholder p {
+  color: #777;
+  font-style: italic;
+}
+
+.loadingSpinner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+
+.floorImage {
+  max-width: 100%;
+  height: auto;
+  margin-top: 15px;
+  margin-bottom: 15px;
+  border: 1px solid #ccc;
+}
+
+.backButton {
+  margin-bottom: 15px;
+}
+
+.confirmationDetails {
+  margin-bottom: 20px;
+  padding: 15px;
+  background-color: #f9f9f9;
+  border-radius: 4px;
+  border: 1px solid #eee;
+}
+
+.confirmationDetails p {
+  margin: 5px 0;
+}
+
+.buttonGroup {
+  display: flex;
+  flex-wrap: wrap; /* Allow buttons to wrap */
+  gap: 10px;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.floorPlanContainer {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.hotspot {
+  position: absolute;
+  background-color: rgba(0, 152, 170, 0.5);
+  border: 1px solid #0098AA;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  z-index: 1;
+}
+
+.hotspot:hover {
+  background-color: rgba(244, 170, 0, 0.7);
+  z-index: 2;
+}
+
+.dropdownContainer {
+  position: relative;
+}
+
+.dropdownToggle {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.dropdownArrow {
+  font-size: 12px;
+  transition: transform 0.3s ease;
+}
+
+.dropdownToggle.active .dropdownArrow {
+  transform: rotate(180deg);
+}
+
+.dropdownMenu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background-color: #0098AA;
+  min-width: 200px;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+  z-index: 1000;
+  border-radius: 0 0 4px 4px;
+  overflow: hidden;
+}
+
+.dropdownItem {
+  display: block;
+  width: 100%;
+  padding: 12px 20px;
+  border: none;
+  background: none;
+  color: white;
+  text-align: left;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s ease;
+}
+
+.dropdownItem:hover {
+  background-color: #007b8a;
+}
+
+.formControl {
+  :global(.ms-Dropdown-container),
+  :global(.ms-TextField-fieldGroup) {
+    border-radius: 4px;
+    transition: box-shadow 0.2s ease-in-out;
+  }
+
+  :global(.ms-Dropdown-container:hover),
+  :global(.ms-TextField-fieldGroup:hover) {
+    border-color: #007b8a;
+  }
+
+  :global(.ms-Dropdown.is-open .ms-Dropdown-container),
+  :global(.ms-TextField-fieldGroup:focus-within) {
+    box-shadow: 0 0 0 2px rgba(0, 152, 170, 0.4);
+    border-color: #0098AA;
+  }
+}
+
+.accordion {
+  margin-top: 20px;
+  border: 1px solid #eee;
+  border-radius: 4px;
+}
+
+.accordionItem {
+  border-bottom: 1px solid #eee;
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.accordionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 15px 20px;
+  background-color: #f9f9f9;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background-color: #f1f1f1;
+  }
+}
+
+.accordionContent {
+  padding: 20px;
+  background-color: #fff;
+}
+
+.teams {
+  border: 1px solid transparent;
+}
+
+.welcome {
+  text-align: center;
+}
+
+.welcomeImage {
+  width: 100%;
+  max-width: 400px;
+}
+
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdownContent {
+  display: none;
+  position: absolute;
+  background-color: #0098AA;
+  min-width: 160px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+  border-radius: 0 0 4px 4px;
+  overflow: hidden;
+}
+
+.dropdown:hover .dropdownContent,
+.dropdown.active .dropdownContent {
+  display: block;
+}
+
+.dropdownContent .navButton {
+  width: 100%;
+  text-align: left;
+  padding: 12px 20px;
+  color: white;
+  background-color: transparent;
+  border-radius: 0;
+  &:hover {
+    background-color: #007b8a;
+  }
+  &.active {
+    background-color: #F4AA00;
+    color: #000;
+  }
+}
+
+.mantenedorSalas {
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+
+.customSalaModal {
+  :global(.ms-Dialog-main) {
+    width: 90vw !important;
+    max-width: 1200px !important;
+    /* min-width is removed to allow flexibility on small screens */
+  }
+}
+
+/* ------------------- */
+/* MEDIA QUERIES START */
+/* ------------------- */
+
+/* Tablet and smaller desktops */
+@media (max-width: 1024px) {
+  .appMain {
+    padding: 15px;
+  }
+  .viewContent {
+    padding: 20px;
+  }
+  .navButton {
+    padding: 15px 15px;
+    font-size: 15px;
+  }
+}
+
+/* Mobile devices */
+@media (max-width: 768px) {
+  .appWrapper {
+    padding: 8px;
+  }
+  .appNav {
+    justify-content: center; /* Center the buttons when they wrap */
+  }
+  .navButton {
+    flex-basis: 30%; /* Ensure at most 3 buttons per row */
+    font-size: 14px;
+  }
+  .appMain {
+    padding: 10px;
+  }
+  .viewContent {
+    padding: 15px;
+  }
+  .viewContent h2 {
+    font-size: 20px;
+  }
+  .buttonGroup {
+    flex-direction: column;
+    gap: 15px;
+    
+    & > * { // Make all buttons inside full width
+      width: 100%;
+    }
+  }
+  .customSalaModal {
+    :global(.ms-Dialog-main) {
+      width: 95vw !important;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .navButton {
+    flex-basis: 45%; /* 2 buttons per row */
+  }
+  .appMain {
+    padding: 5px;
+  }
+  .viewContent {
+    padding: 10px;
+  }
+}
+
+.generarQRContainer {
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+
+.headerText {
+  margin-bottom: 20px;
+  color: #333;
+  border-bottom: 2px solid #f0f0f0;
+  padding-bottom: 10px;
+}
+
+.controlsStack {
+  margin-bottom: 20px;
+}
+
+.buttonGroup {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    button {
+      width: 100%;
+    }
+  }
+}
+
+.qrDisplayArea {
+  margin-top: 30px;
+  border-top: 1px solid #eee;
+  padding-top: 20px;
+}
+
+.qrCodeItem {
+  border: 1px solid #ddd;
+  padding: 15px;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+  text-align: center;
+}
+
+.qrLabel {
+  margin-bottom: 10px;
+  font-weight: 600;
+  color: #555;
+}
+
+.massiveQrGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 20px;
+  justify-items: center;
+
+  @media (max-width: 480px) {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  }
+}
+
+.headerBar {
+    display: 'flex';
+    align-items: 'center';
+    justify-Content: 'space-between';
+    background-Color: '#ffffff'; // Fondo blanco limpio
+    padding: '10px 20px';
+    border-bottom: '2px solid #f3f2f1';
+    box-Shadow: '0 2px 4px rgba(0,0,0,0.05)';
+    margin-Bottom: '20px';
+  }
+  .userSection {
+    flex: '1'; // Ocupa espacio a la izquierda
+    display: 'flex';
+    align-Items: 'center';
+    justify-content: 'flex-end',
+  }
+  .userName {
+    font-Size: '14px';
+    color: '#323130';
+    font-Weight: '600';
+    background-Color: '#f3f2f1'; // Un fondo suave para el nombre
+    padding: '6px 12px';
+    border-Radius: '20px';
+  }
+  .titleSection { 
+    text-Align: 'center';
+    color: #ddd;
+    background-color: #e55302;
+    flex: 2;
+    text-align: center;
+    position: relative; // Base para la imagen absoluta
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 70px;
+    width: 100%;
+    //padding: 0 5px;
+  }
+
+  .logo{
+    position: absolute;
+    left: 50px;
+    max-width: 180px;
+    max-height: 64px;
+
+  }
+  .mainTitle {
+    margin: 0;
+    font-Size: '26px';
+    font-Weight: '700';
+    color: '#0078d4'; // Azul institucional de SharePoint
+    text-Transform: 'uppercase';
+    letter-Spacing: '1px''-0.5px';
+  }
+  .spacer {
+    flex: '1' // Mismo tamaño que userSection para que el centro sea exacto
+  }
