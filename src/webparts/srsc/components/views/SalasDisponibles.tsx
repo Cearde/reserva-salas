@@ -9,8 +9,15 @@ import ReservaSalaSchedule from './ReservaSalaSchedule';
 import { useSPFxContext } from '../../contexts/SPFxContext';
 import * as strings from 'SrscWebPartStrings';
 import { getRestrictedDates } from '../../utils/utils';
-const SalasDisponibles: React.FC<IViewProps> = () => {
+import {useAuth} from '../../contexts/AuthContext';
+
+
+
+const SalasDisponibles: React.FC<IViewProps> = (props) => {
   const context = useSPFxContext();
+  const { isAdmin } = useAuth();
+  const  { usuarioIDLista }  = props;
+  const  { usuarioIDDivision }  = props;
   const spService = React.useMemo(() => new SPService(context), [context]);
 
   // --- State Management ---
@@ -68,6 +75,46 @@ const SalasDisponibles: React.FC<IViewProps> = () => {
       setFilteredPisos([]);
     }
   }, [selectedPlanta, pisos]);
+
+  React.useEffect( () => {
+    
+      // 1. Supongamos que ya cargaste tus usuarios en dropdownOptions.usuarios
+      if (usuarios.length > 0 && !selectedUsuario) {
+       // const currentUserId = usuarioIDLista context.pageContext.legacyPageContext.usuarioIDLista;
+  
+        // 3. Verificamos si el usuario actual existe en la lista del dropdown
+        const currentUserOption = usuarios.find(u => Number(u.key) === usuarioIDLista);
+  
+        if (currentUserOption) {
+          setSelectedUsuario(Number(currentUserOption.key));
+        }
+      }
+      
+  
+  }, [usuarios]); 
+
+  //usuarioIDDivision
+  React.useEffect( () => {
+    
+      // 1. Supongamos que ya cargaste tus usuarios en dropdownOptions.usuarios
+      if (plantas.length > 0 && !selectedPlanta) {
+       // const currentUserId = usuarioIDLista context.pageContext.legacyPageContext.usuarioIDLista;
+  
+        // 3. Verificamos si el usuario actual existe en la lista del dropdown
+        const currentUserOption = plantas.filter(u => Number(u.key) === usuarioIDDivision);
+  
+        if (currentUserOption) {
+          if(isAdmin) {
+            setPlantas(plantas);
+            setSelectedPlanta(Number(currentUserOption[0].key));
+          }else {
+            setPlantas(currentUserOption);
+            setSelectedPlanta(Number(currentUserOption[0].key));
+          }
+        }
+      }
+      
+  }, [plantas]); 
 
   // Effect to fetch schedules when a piso is expanded
   React.useEffect(() => {
@@ -229,8 +276,25 @@ const SalasDisponibles: React.FC<IViewProps> = () => {
           )}
           {/* Filter controls */}
           <Stack horizontal wrap tokens={{ childrenGap: 15 }} style={{ marginBottom: '20px' }}>
-            <div className={`${styles.formGroup} ${styles.formControl}`}><Dropdown label={strings.PlantaLabel} placeholder={strings.SelectPlantaPlaceholder} options={plantas} onChange={(e, option) => setSelectedPlanta(option ? Number(option.key) : undefined)} selectedKey={selectedPlanta} required /></div>
-            <div className={`${styles.formGroup} ${styles.formControl}`}><Dropdown label={strings.UsuarioLabel} placeholder={strings.SelectUsuarioPlaceholder} options={usuarios} onChange={(e, option) => setSelectedUsuario(option ? Number(option.key) : undefined)} selectedKey={selectedUsuario} required /></div>
+            <div className={`${styles.formGroup} ${styles.formControl}`}>
+              <Dropdown 
+              label={strings.PlantaLabel} 
+              placeholder={strings.SelectPlantaPlaceholder} 
+              options={plantas} 
+              onChange={(e, option) => setSelectedPlanta(option ? Number(option.key) : undefined)} 
+              selectedKey={selectedPlanta} 
+              required />
+            </div>
+            <div className={`${styles.formGroup} ${styles.formControl}`}>
+              <Dropdown 
+                label={strings.UsuarioLabel} 
+                placeholder={strings.SelectUsuarioPlaceholder} 
+                options={usuarios} 
+                onChange={(e, option) => setSelectedUsuario(option ? Number(option.key) : undefined)} 
+                selectedKey={selectedUsuario} 
+                required 
+              />
+            </div>
             <div className={`${styles.formGroup} ${styles.formControl}`}>
               <DatePicker 
                 label={strings.FechaReservaLabel} 

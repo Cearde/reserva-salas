@@ -151,7 +151,8 @@ const MantenedorGerencia: React.FC<IViewProps> = () => {
           } catch (err) {
               //setError(strings.ErrorDeletingGerencia + " " + err.message);
               setMessage({ type: MessageBarType.error, text: strings.ErrorDeletingGerencia });
-              console.error("Error eliminando la gerencia:", err.message);
+              const msg = err instanceof Error ? err.message : String(err);
+              console.error("Error eliminando la gerencia:", msg);
           } finally {
               setShowDeleteConfirm(false);
               setGerenciaToDelete(undefined);
@@ -211,14 +212,14 @@ const MantenedorGerencia: React.FC<IViewProps> = () => {
   };
 
   const columns: IColumn[] = [
-    {
+    /*{
       key: 'idColumn',
       name: 'ID',
       fieldName: 'Id',
       minWidth: 40,
       maxWidth: 60, // Keep ID small
       isResizable: true,
-    },
+    },*/
     {
       key: 'titleColumn',
       name: strings.GerenciaNameLabel,

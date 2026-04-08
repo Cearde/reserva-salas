@@ -19,13 +19,13 @@ import {
   IColumn,
   IconButton,
   TooltipHost,
-  Dropdown,
-  IDropdownOption
+  Dropdown
+ // IDropdownOption
 } from '@fluentui/react';
 import { PeoplePicker, PrincipalType } from "@pnp/spfx-controls-react/lib/PeoplePicker";
 import { useSPFxContext } from '../../contexts/SPFxContext';
 import { SPService } from '../../services/sp';
-import { IUsuarioItem, IGerenciaItem } from '../models/entities';
+import { IUsuarioItem, IGerenciaItem, IDivisionItem } from '../models/entities';
 import * as strings from 'SrscWebPartStrings';
 
 const MantenedorUsuarios: React.FC<IViewProps> = () => {
@@ -33,9 +33,10 @@ const MantenedorUsuarios: React.FC<IViewProps> = () => {
   const spService = React.useMemo(() => new SPService(context), [context]);
 
   const [usuarios, setUsuarios] = useState<IUsuarioItem[]>([]);
-  const [vicepresidencias, setVicepresidencias] = useState<IDropdownOption[]>([]);
+  //const [vicepresidencias, setVicepresidencias] = useState<IDropdownOption[]>([]);
+  const [divisiones, setdivisiones] = useState<IDivisionItem[]>([]);
   const [allGerencias, setAllGerencias] = useState<IGerenciaItem[]>([]);
-  const [filteredGerencias, setFilteredGerencias] = useState<IDropdownOption[]>([]);
+  //const [filteredGerencias, setFilteredGerencias] = useState<IDropdownOption[]>([]);
   
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [currentUser, setCurrentUser] = useState<IUsuarioItem | undefined>(undefined);
@@ -48,20 +49,23 @@ const MantenedorUsuarios: React.FC<IViewProps> = () => {
   const [message, setMessage] = React.useState<{ type: MessageBarType, text: string } | undefined>(undefined);
   // Form validation state
   const [userError, setUserError] = useState<string | undefined>(undefined);
-  const [vicepresidenciaError, setVicepresidenciaError] = useState<string | undefined>(undefined);
+  //const [vicepresidenciaError, setVicepresidenciaError] = useState<string | undefined>(undefined);
+  const [divisionError, setDivisionError] = useState<string | undefined>(undefined);
   const [gerenciaError, setGerenciaError] = useState<string | undefined>(undefined);
 
   const fetchUsuario = useCallback(async () => {
     setIsLoading(true);
     setErrorTitle(undefined);
     try {
-      const [fetchedUsuarios, fetchedVicepresidencias, fetchedGerencias] = await Promise.all([
+      const [fetchedUsuarios, /*fetchedVicepresidencias,*/fetchdivisiones, fetchedGerencias] = await Promise.all([
         spService.getUsuarios(true), // Fetch all users, including inactive
-        spService.getVicepresidencias(false), // Fetch only active vicepresidencias for dropdown
+        //spService.getVicepresidencias(false), // Fetch only active vicepresidencias for dropdown
+        spService.getDivisiones(false), // Fetch only active divisiones for dropdown
         spService.getGerencias(false) // Fetch only active gerencias for dropdown
       ]);
       setUsuarios(fetchedUsuarios);
-      setVicepresidencias(fetchedVicepresidencias.map(vp => ({ key: vp.Id!, text: vp.Title })));
+      //setVicepresidencias(fetchedVicepresidencias.map(vp => ({ key: vp.Id!, text: vp.Title })));
+      setdivisiones(fetchdivisiones);//.map(vp => ({ key: vp.Id!, text: vp.Title })));
       setAllGerencias(fetchedGerencias);
     } catch (err) {
       //setError(strings.ErrorFetchingData);
@@ -77,7 +81,7 @@ const MantenedorUsuarios: React.FC<IViewProps> = () => {
   }, [fetchUsuario]);
 
   // Effect for cascading dropdown
-  useEffect(() => {
+  /*useEffect(() => {
     if (currentUser?.VicepresidenciaId && allGerencias.length > 0) {
       const filtered = allGerencias
         .filter(g => g.VicepresidenciaId === currentUser.VicepresidenciaId)
@@ -87,22 +91,25 @@ const MantenedorUsuarios: React.FC<IViewProps> = () => {
       setFilteredGerencias([]);
     }
   }, [currentUser?.VicepresidenciaId, allGerencias]);
-
+*/
 
   const validateForm = (): boolean => {
     let isValid = true;
-    if (!currentUser?.id) {
+    if (!currentUser?.LoginName) {
       setUserError(strings.RequiredField);
       isValid = false;
     } else {
       setUserError(undefined);
     }
 
-    if (!currentUser?.VicepresidenciaId) {
-      setVicepresidenciaError(strings.RequiredField);
+    if (!currentUser?.divisionId){//VicepresidenciaId) {
+      //setVicepresidenciaError(strings.RequiredField);
+      setDivisionError(strings.RequiredField);
+
       isValid = false;
     } else {
-      setVicepresidenciaError(undefined);
+      //setVicepresidenciaError(undefined);
+      setDivisionError(undefined);
     }
 
     if (!currentUser?.GerenciaId) {
@@ -118,16 +125,22 @@ const MantenedorUsuarios: React.FC<IViewProps> = () => {
     setCurrentUser({
       id: "",
       text: '',
-      secondaryText: '',
-      VicepresidenciaId: 0,
+      email: '',
+      //secondaryText: '',
+      usuarioId: 0,
+      LoginName: '',
+     // VicepresidenciaId: 0,
+      divisionId: 0,
       GerenciaId: 0,
+      esAdmin: false,
       activo: true,
     } as IUsuarioItem);
     setIsModalOpen(true);
     setErrorTitle(undefined);
     setMessage(undefined);
     setUserError(undefined);
-    setVicepresidenciaError(undefined);
+    //setVicepresidenciaError(undefined);
+    setDivisionError(undefined);
     setGerenciaError(undefined);
   };
 
@@ -137,7 +150,8 @@ const MantenedorUsuarios: React.FC<IViewProps> = () => {
     setErrorTitle(undefined);
     setMessage(undefined);
     setUserError(undefined);
-    setVicepresidenciaError(undefined);
+    //setVicepresidenciaError(undefined);
+    setDivisionError(undefined);
     setGerenciaError(undefined);
   };
 /*
@@ -170,12 +184,24 @@ const MantenedorUsuarios: React.FC<IViewProps> = () => {
       if (usuarioToDelete?.Id) {
           try {
               await spService.deleteUsuario(usuarioToDelete.Id);
+              const buscaEnGrupoAdmin = await spService.ensureUserInGroup('SRSC_ADMINISTRADOR',usuarioToDelete.email);
+              const buscaEnColaboradores = await spService.ensureUserInGroup('SRSC-Colaboradores',usuarioToDelete.email);
+              if(buscaEnGrupoAdmin.value.length > 0){
+                await spService.removeUserFromGroup('SRSC_ADMINISTRADOR', usuarioToDelete.usuarioId);
+              }
+
+              if(buscaEnColaboradores.value.length > 0){
+                await spService.removeUserFromGroup('SRSC-Colaboradores', usuarioToDelete.usuarioId);
+              }
+
               setMessage({ type: MessageBarType.success, text: strings.UsuarioDeletedSuccess });
+
               fetchUsuario();
           } catch (err) {
               //setError(strings.ErrorDeletingUsuario + " " + err.message);
-              setMessage({ type: MessageBarType.error, text: strings.ErrorDeletingUsuario });
-              console.error("Error eliminando usuario:", err.message);
+              const msg = err instanceof Error ? err.message : String(err);
+              setMessage({ type: MessageBarType.error, text: strings.ErrorDeletingUsuario + ": " + msg });
+              console.error("Error eliminando usuario:", err);
           } finally {
               setShowDeleteConfirm(false);
               setUsuarioToDelete(undefined);
@@ -201,58 +227,94 @@ const MantenedorUsuarios: React.FC<IViewProps> = () => {
     try {
       if (currentUser.Id) {
         await spService.updateUsuario(currentUser);
+        adminGrupoUsuario(currentUser);
         setMessage({ type: MessageBarType.success, text: strings.UserUpdatedSuccess });
         //setMessageType(MessageBarType.success);
       } else {
         await spService.createUsuario(currentUser);
+        adminGrupoUsuario(currentUser);
         setMessage({ type: MessageBarType.success, text: strings.UserAddedSuccess });
         //setMessageType(MessageBarType.success);
       }
       setIsModalOpen(false);
       setCurrentUser(undefined);
+
       await fetchUsuario(); // Refresh the list
     } catch (err) {
       //setError(currentUser.Id ? strings.ErrorUpdatingUser : strings.ErrorAddingUser);
-      if(err.message.toLowerCase().includes('duplicado')){
+      const msg = err instanceof Error ? err.message : String(err);
+      if(msg.toLowerCase().includes('duplicado')){
         setErrorTitle("El usuario ya se encuentra registrado.");
       } else {
-        setMessage({ type: MessageBarType.error, text: currentUser.Id ? strings.ErrorUpdatingUser : strings.ErrorAddingUser + " " + err.message });
+        
+        setMessage({ type: MessageBarType.error, text: currentUser.Id ? strings.ErrorUpdatingUser : strings.ErrorAddingUser + " " + msg });
       }
-      console.error(err.message);
+      console.error(err);
     } finally {
       setIsLoading(false);
     }
   };
 
+  const adminGrupoUsuario = async (currentUser: IUsuarioItem) => {
+
+    const buscaEnGrupoAdmin = await spService.ensureUserInGroup('SRSC_ADMINISTRADOR',currentUser.email);
+    const bscaEnColaboradores = await spService.ensureUserInGroup('SRSC-Colaboradores',currentUser.email);
+
+    const estaEnGrupoAdmin = buscaEnGrupoAdmin.value.length > 0;
+    const estaEnColaboradores = bscaEnColaboradores.value.length > 0;
+
+    if(currentUser.esAdmin && !estaEnGrupoAdmin){
+      await spService.addUserInGroup('SRSC_ADMINISTRADOR', currentUser.LoginName);
+
+    }
+
+    if(!currentUser.esAdmin && estaEnGrupoAdmin){
+      const userId = buscaEnGrupoAdmin.value[0].Id;
+      await spService.removeUserFromGroup('SRSC_ADMINISTRADOR', userId);
+      await spService.addUserInGroup('SRSC-Colaboradores', currentUser.LoginName);
+
+    }
+
+    if(!currentUser.esAdmin &&  !estaEnColaboradores){
+      await spService.addUserInGroup('SRSC-Colaboradores', currentUser.LoginName);
+    }
+  };
+
+
+
   const seleccionarUsuario = (items: any[]) => {
-                if (items && items.length > 0) {
-                    setCurrentUser((prev: IUsuarioItem | undefined) => ({ ...prev, id: items[0].id ? items[0].id : 'N/A', 
-                                                                                  text: items[0].text || '', 
-                                                                                  secondaryText: items[0].secondaryText || '' } as IUsuarioItem));
-                    setUserError(undefined);
-                } else {
-                    setCurrentUser((prev: IUsuarioItem | undefined) => ({ ...prev, id: 'N/A' } as IUsuarioItem));
-                }
+    if (items && items.length > 0) {
+        setCurrentUser((prev: IUsuarioItem | undefined) => ({ ...prev, LoginName: items[0].id ? items[0].id : 'N/A', 
+                                                                      text: items[0].text || '', 
+                                                                      email: items[0].secondaryText || '' } as IUsuarioItem));
+        setUserError(undefined);
+    } else {
+        setCurrentUser((prev: IUsuarioItem | undefined) => ({ ...prev, LoginName: 'N/A' } as IUsuarioItem));
+    }
   };
 
 
   const onCancel = (): void => {
     setIsModalOpen(false);
+    setShowDeleteConfirm(false);
     setCurrentUser(undefined);
     setErrorTitle(undefined);
     setMessage(undefined);
     setUserError(undefined);
-    setVicepresidenciaError(undefined);
+    //setVicepresidenciaError(undefined);
+    setDivisionError(undefined);
     setGerenciaError(undefined);
   };
 
   const columns: IColumn[] = [
-    { key: 'idColumn', name: 'ID', fieldName: 'Id', minWidth: 40, maxWidth: 60, isResizable: true },
+   // { key: 'idColumn', name: 'ID', fieldName: 'Id', minWidth: 20,  isResizable: true },
     { key: 'userColumn', name: strings.UserLabel, fieldName: 'text', minWidth: 150, isResizable: true },
-    { key: 'emailColumn', name: strings.EmailLabel, fieldName: 'secondaryText', minWidth: 150, isResizable: true, isMultiline: true },
-    { key: 'vpColumn', name: strings.GerenciaVicepresidenciaLabel, fieldName: 'VicepresidenciaTitle', minWidth: 150, isResizable: true, isMultiline: true },
-    { key: 'gColumn', name: strings.GerenciaNameLabel, fieldName: 'GerenciaTitle', minWidth: 150, isResizable: true },
-    { key: 'activoColumn', name: strings.GerenciaActiveLabel, fieldName: 'activo', minWidth: 80, isResizable: true, onRender: (item: IUsuarioItem) => (item.activo ? strings.YesLabel : strings.NoLabel) },
+    { key: 'emailColumn', name: strings.EmailLabel, fieldName: 'email', minWidth: 150, isResizable: true, isMultiline: true },
+    { key: 'division', name: strings.PisoPlantaLabel, fieldName: 'divisionTitle', minWidth: 80, isResizable: true, isMultiline: true },
+   // { key: 'vpColumn', name: strings.GerenciaVicepresidenciaLabel, fieldName: 'VicepresidenciaTitle', minWidth: 150, isResizable: true, isMultiline: true },
+    { key: 'gColumn', name: strings.GerenciaLabel, fieldName: 'divisionTitle', minWidth: 150, isResizable: true },
+    { key: 'esAdminColumn', name: strings.UsuarioROLLabel, fieldName: 'esAdmin', minWidth: 80, isResizable: true, onRender: (item: IUsuarioItem) => (item.esAdmin ? "Admin" : "Colaborador") },
+    { key: 'activoColumn', name: strings.UsuarioActivoLabel, fieldName: 'activo', minWidth: 50, isResizable: true, onRender: (item: IUsuarioItem) => (item.activo ? strings.YesLabel : strings.NoLabel) },
     {
       key: 'actionsColumn',
       name: strings.AccionesColumn,
@@ -320,9 +382,10 @@ const MantenedorUsuarios: React.FC<IViewProps> = () => {
             resolveDelay={1000}
             required
             onChange={seleccionarUsuario}
-            defaultSelectedUsers={currentUser?.secondaryText ? [currentUser.secondaryText] : []}
+            defaultSelectedUsers={currentUser?.email ? [currentUser.email] : []}
             errorMessage={userError}
           />
+          {/* Dropdowns de Vicepresidencia y Gerencia con validación 
           <Dropdown
             label={strings.GerenciaVicepresidenciaLabel}
             required
@@ -334,11 +397,25 @@ const MantenedorUsuarios: React.FC<IViewProps> = () => {
             }}
             placeholder={strings.SelectVicepresidenciaPlaceholder}
             errorMessage={vicepresidenciaError}
+          />*/}
+          <Dropdown
+            label={strings.PisoPlantaLabel}
+            required
+            options={divisiones.map(d => ({ key: d.Id!, text: d.Title }))}
+            selectedKey={currentUser?.divisionId || null}
+            onChange={(e, option) => {
+                setCurrentUser((prev: IUsuarioItem | undefined) => ({ ...prev, divisionId: option?.key as number } as IUsuarioItem));
+                //setVicepresidenciaError(undefined);
+                setDivisionError(undefined);
+            }}
+            placeholder={strings.SelectPlantaPlaceholder}
+            //errorMessage={vicepresidenciaError}
+            errorMessage={divisionError}
           />
           <Dropdown
-            label={strings.GerenciaNameLabel}
+            label={strings.GerenciaLabel}
             required
-            options={filteredGerencias}
+            options={allGerencias.map(g => ({ key: g.Id!, text: g.Title }))}
             selectedKey={currentUser?.GerenciaId || null}
             onChange={(e, option) => {
                 setCurrentUser((prev: IUsuarioItem | undefined) => ({ ...prev, GerenciaId: option?.key as number } as IUsuarioItem));
@@ -346,10 +423,20 @@ const MantenedorUsuarios: React.FC<IViewProps> = () => {
             }}
             placeholder={strings.SelectGerenciaPlaceholder}
             errorMessage={gerenciaError}
-            disabled={!currentUser?.VicepresidenciaId || filteredGerencias.length === 0}
+           //disabled={!currentUser?.VicepresidenciaId || filteredGerencias.length === 0}
+          />
+          
+          <Toggle
+            label="Usuario Administrador"
+            onText={strings.YesLabel}
+            offText={strings.NoLabel}
+            checked={currentUser?.esAdmin || false}
+            onChange={(e, checked) =>
+              setCurrentUser((prev: IUsuarioItem | undefined) => ({ ...prev, esAdmin: checked || false } as IUsuarioItem))
+            }
           />
           <Toggle
-            label={strings.GerenciaActiveLabel}
+            label="Activo"
             onText={strings.YesLabel}
             offText={strings.NoLabel}
             checked={currentUser?.activo || false}

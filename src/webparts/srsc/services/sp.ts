@@ -2,8 +2,7 @@ import { WebPartContext } from "@microsoft/sp-webpart-base";
 import { SPHttpClient, SPHttpClientResponse } from "@microsoft/sp-http";
 import * as strings from 'SrscWebPartStrings';
 import { IDropdownOption } from "@fluentui/react"; 
-
-//import { sp } from "@pnp/sp";
+ 
 import { Web } from  "@pnp/sp/webs";
 import "@pnp/sp/site-users/web";
 
@@ -18,10 +17,11 @@ import { ISPItem, ISPListItem, ISPPisoItem,IPisoItem,IReservationSPItem,
 
 
 export class SPService {
-  private context: WebPartContext;
+  private context: WebPartContext; 
 
   constructor(context: WebPartContext) {
     this.context = context;
+    
   }
 
   /**
@@ -64,10 +64,11 @@ export class SPService {
    * @returns A promise that resolves to an object containing arrays of options for plantas, pisos, and usuarios.
    */
   public async getFormDropdownOptions(): Promise<{ plantas: IDropdownOption[], pisos: IDropdownOption[], usuarios: IDropdownOption[] }> {
-    const [plantasData, pisosData, usuariosData] = await Promise.all([
-      this.fetchActiveListItems('LM_PLANTAS'),
+    const [usuariosData, pisosData,plantasData] = await Promise.all([
+      // Fetch only active plantas
+      this.fetchActiveListItems('LM_USUARIOS'),
       this.fetchActiveListItems('LM_PISOS', ['IMAGEN','PLANTAId']), // Also fetch the IMAGEN field for floors
-      this.fetchActiveListItems('LM_USUARIOS')
+     this.fetchActiveListItems('LM_PLANTAS',[]) // Filter plantas by the user's division, 
     ]);
 
     return {
@@ -265,6 +266,87 @@ export class SPService {
       throw error;
     }
   }
+
+
+public async ensureUserInGroup(groupName: string, userEmail: string): Promise<any> {
+  try {
+    // 1. Obtenemos el grupo por su nombre
+    const members = await `${this.context.pageContext.web.absoluteUrl}/_api/web/sitegroups/getByName('${groupName}')/users?$filter=Email eq '${userEmail}'`;
+    
+    const response: SPHttpClientResponse = await this.context.spHttpClient.get(members, SPHttpClient.configurations.v1);
+
+    if (response.ok) {
+      const data = await response.json();
+      return data; // Si el array tiene elementos, el usuario ya está en el grupo
+
+    }
+    
+
+  } catch (error) {
+    console.error("Error en ensureUserInGroup:", error);
+    throw error; 
+  }
+}
+
+
+public async removeUserFromGroup(groupName: string, userId: number): Promise<boolean> {
+  try {
+    //const encodedLogin = encodeURIComponent(userId);
+    const removeUrl = `${this.context.pageContext.web.absoluteUrl}/_api/web/sitegroups/getbyname('${groupName}')/users/removebyid(${userId})`;
+    
+    const spOptions = {
+      headers: {
+        'Accept': 'application/json;odata=nometadata',
+        'Content-type': 'application/json;odata=nometadata',
+        'X-HTTP-Method': 'DELETE' // Algunas versiones de SP prefieren el override de método
+      }
+    };
+
+    const addRes = await this.context.spHttpClient.post(removeUrl, SPHttpClient.configurations.v1, spOptions);
+
+    if (!addRes.ok) {
+      const error = await addRes.json();
+      //throw new Error(error.error.message.value);
+      console.error(error.error.message.value);
+      return false; // Si no se pudo agregar, devolvemos false para no bloquear el acceso
+    }
+
+    
+    return true; // Si no se pudo verificar, devolvemos false para no bloquear el acceso
+
+
+  } catch (error) {
+    console.error("Error en addUserInGroup:", error);
+    return false; // En caso de error, devolvemos false para no bloquear el acceso
+  }
+}
+
+public async addUserInGroup(groupName: string, userEmail: string): Promise<any> {
+  try {
+    const addUrl = `${this.context.pageContext.web.absoluteUrl}/_api/web/sitegroups/getbyname('${groupName}')/users`;
+
+    const addOptions = {
+        headers: {
+            'Accept': 'application/json;odata=nometadata',
+            'Content-type': 'application/json;odata=nometadata',
+            'odata-version': ''
+        },
+        body: JSON.stringify({ LoginName: userEmail })
+    };
+
+    const addRes = await this.context.spHttpClient.post(addUrl, SPHttpClient.configurations.v1, addOptions);
+
+    if (!addRes.ok) {
+      const error = await addRes.json();
+      console.error(error.error.message.value); 
+      throw new Error(error.error.message.value);
+    }
+    return await addRes.json(); // Devolvemos la respuesta completa para que el caller pueda verificar el resultado
+  } catch (error) {
+    console.error("Error en addUserInGroup:", error);
+    throw error; // En caso de error, lanzamos el error para que el caller pueda manejarlo
+  }
+}
 
   /**
    * Checks if the current user is a member of the specified SharePoint group.
@@ -799,7 +881,7 @@ export class SPService {
       const entidadEnUso = await this.getEntityByFilter("LO_PUESTORESERVADO", "PUESTOId eq " + id);
 
       if (entidadEnUso) {
-        throw new Error(`No se puede eliminar la Sala porque tiene reservas asociadas.`);
+        throw new Error(`tiene reservas asociadas.`);
       }
 
       const response: SPHttpClientResponse = await this.context.spHttpClient.post(
@@ -975,7 +1057,7 @@ export class SPService {
       const entidadEnUso = await this.getEntityByFilter("LM_PUESTOSPISO", "PISOId eq " + id);
 
       if (entidadEnUso) {
-        throw new Error(`No se puede eliminar el Piso porque tiene salas asociadas.`);
+        throw new Error(`tiene salas asociadas.`);
       }
 
 
@@ -1432,6 +1514,27 @@ const spHttpClientOptions = {
   return folderPath; // Retornamos la ruta completa verificada
 }
 
+public async getQR(salaID:number = 1, pisoId:number = 1): Promise<string> {
+    //const listName = 'lista';
+
+    const apiUrl = `${this.context.pageContext.web.absoluteUrl}/_api/web/lists/getbytitle('LO_QRPUESTOS')/items?$filter=PISOId eq ${pisoId} and SALAId eq ${salaID}&$select=File/ServerRelativeUrl&$expand=File`;
+
+    try {
+      const response: SPHttpClientResponse = await this.context.spHttpClient.get(apiUrl, SPHttpClient.configurations.v1);
+      if (response.ok) {
+        const data = await response.json();
+        return data.value[0].File.ServerRelativeUrl;
+      } else {
+        const errorData = await response.json();
+        console.error('Error obteniendo el QR', errorData);
+        throw new Error(`Error obteniendo el QR. Status: ${response.statusText}`);
+      }
+    } catch (error) {
+      console.error(`Error obteniendo el QR:`, error);
+      throw error;
+    }
+  }
+
   // CRUD operations for LM_VICEPRESIDENCIAS
   public async getVicepresidencias(includeInactive: boolean = false): Promise<IVicepresidenciaItem[]> {
     const listName = 'LM_VICEPRESIDENCIAS';
@@ -1552,7 +1655,7 @@ const spHttpClientOptions = {
       const entidadEnUso = await this.getEntityByFilter("LM_GERENCIAS", "VICEPRESIDENCIAId eq " + id);
 
       if (entidadEnUso) {
-        throw new Error(`No se puede eliminar la Vicepresidencia porque tiene gerencias asociadas.`);
+        throw new Error(`tiene gerencias asociadas.`);
       }
 
 
@@ -1735,7 +1838,7 @@ const spHttpClientOptions = {
     if (!includeInactive) {
       filter = `&$filter=activo eq 1`;
     }
-    const apiUrl = `${this.context.pageContext.web.absoluteUrl}/_api/web/lists/getbytitle('${listName}')/items?$select=Id,activo,USUARIO/Id,USUARIO/Title,USUARIO/EMail,VICEPRESIDENCIA/Id,VICEPRESIDENCIA/Title,GERENCIA/Id,GERENCIA/Title&$expand=USUARIO,VICEPRESIDENCIA,GERENCIA${filter}`;
+    const apiUrl = `${this.context.pageContext.web.absoluteUrl}/_api/web/lists/getbytitle('${listName}')/items?$select=Id,activo,esAdmin,USUARIO/Id,USUARIO/Name,USUARIO/Title,USUARIO/EMail,division/Id,division/Title,GERENCIA/Id,GERENCIA/Title&$expand=USUARIO,division,GERENCIA${filter}`;
 
     try {
       const response: SPHttpClientResponse = await this.context.spHttpClient.get(apiUrl, SPHttpClient.configurations.v1);
@@ -1744,14 +1847,18 @@ const spHttpClientOptions = {
         if (data.value) {
           return data.value.map((item: ISPUsuarioItem): IUsuarioItem => ({
             Id: item.Id,
-            id: item.USUARIO ? item.USUARIO.id : 'N/A',
+            usuarioId: item.USUARIO ? item.USUARIO.Id : 0,
+            LoginName: item.USUARIO ? item.USUARIO.Name : '',
             text: item.USUARIO ? item.USUARIO.Title : 'N/A',
-            secondaryText: item.USUARIO ? item.USUARIO.EMail : 'N/A',
-            VicepresidenciaId: item.VICEPRESIDENCIA ? item.VICEPRESIDENCIA.Id : 0,
-            VicepresidenciaTitle: item.VICEPRESIDENCIA ? item.VICEPRESIDENCIA.Title : 'N/A',
+            email: item.USUARIO ? item.USUARIO.EMail : 'N/A',
+            //VicepresidenciaId: item.VICEPRESIDENCIA ? item.VICEPRESIDENCIA.Id : 0,
+            //VicepresidenciaTitle: item.VICEPRESIDENCIA ? item.VICEPRESIDENCIA.Title : 'N/A',
+            divisionId: item.division ? item.division.Id : 0,
+            divisionTitle: item.division ? item.division.Title : 'N/A',
             GerenciaId: item.GERENCIA ? item.GERENCIA.Id : 0,
             GerenciaTitle: item.GERENCIA ? item.GERENCIA.Title : 'N/A',
             activo: item.activo,
+            esAdmin: item.esAdmin,
           }));
         }
         return [];
@@ -1773,7 +1880,7 @@ const spHttpClientOptions = {
     const webBase = Web(this.context.pageContext.web.absoluteUrl);
       //const userRes = await sp.web.ensureUser(user.loginName);
       //const idNumerico = userRes.data.Id;
-    const idUsuario = await webBase.ensureUser(usuario.id);
+    const idUsuario = await webBase.ensureUser(usuario.LoginName);
 
     const spHttpClientOptions = {
       headers: {
@@ -1783,10 +1890,12 @@ const spHttpClientOptions = {
       },
       body: JSON.stringify({
         USUARIOId: idUsuario.data.Id,//usuario.id,
-        VICEPRESIDENCIAId: usuario.VicepresidenciaId,
+        //VICEPRESIDENCIAId: usuario.VicepresidenciaId,
+        divisionId: usuario.divisionId,
         GERENCIAId: usuario.GerenciaId,
         activo: usuario.activo,
         Title: idUsuario.data.Title, 
+        esAdmin: usuario.esAdmin,
       })
     };
 
@@ -1818,8 +1927,8 @@ const spHttpClientOptions = {
       }
     } catch ( error) {
       console.error(`Error mientras se creaaba el usuario:`,error);
-
-      throw new Error(`Error mientras se creaba el usuario: ${error.message}`);
+      const msg = error instanceof Error ? error.message : String(error);
+      throw new Error(`Error mientras se creaba el usuario: ${msg}`);
     }
   }
 
@@ -1836,10 +1945,12 @@ const spHttpClientOptions = {
         'X-HTTP-Method': 'MERGE'
       },
       body: JSON.stringify({
-        USUARIOId: usuario.id,
-        VICEPRESIDENCIAId: usuario.VicepresidenciaId,
+        USUARIOId: usuario.usuarioId,
+        //VICEPRESIDENCIAId: usuario.VicepresidenciaId,
         GERENCIAId: usuario.GerenciaId,
         activo: usuario.activo,
+        esAdmin: usuario.esAdmin,
+        divisionId: usuario.divisionId,
       })
     };
 

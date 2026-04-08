@@ -123,6 +123,7 @@ declare interface ISrscWebPartStrings {
   MantenedorSalasTitle: string;
   AddSalaButton: string;
   EditSalaButton: string;
+  VerQR:  string;
   DeleteSalaButton: string;
   SalaNameLabel: string;
   SalaCupoLabel: string;
@@ -184,6 +185,7 @@ declare interface ISrscWebPartStrings {
   GerenciaAddedSuccess: string;
   CannotDeleteGerenciaWithoutId: string;
   GerenciaNameLabel: string;
+  GerenciaLabel: string;
   GerenciaActiveLabel: string;
   GerenciaVicepresidenciaLabel: string;
   SelectVicepresidenciaPlaceholder: string;
@@ -216,6 +218,12 @@ declare interface ISrscWebPartStrings {
   UsuarioUpdatedSuccess: string;
   UsuarioAddedSuccess: string;
   UsuarioDeleteButton: string;
+  UsuarioActivoLabel: string;
+  GerenciaLabel: string;
+  DivisionLabel: string;
+  GerenciaVicepresidenciaLabel: string;
+  SelectDivisionPlaceholder: string;
+  UsuarioROLLabel: string;
 
   // Mantenedor Divisiones
   MantenedorDivisionesView: string;

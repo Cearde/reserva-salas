@@ -13,6 +13,8 @@ import Srsc from './components/Srsc';
 //import { ISrscProps } from './components/ISrscProps';
 import { APP_VERSION } from './utils/utils';
 import { AuthProvider } from './contexts/AuthContext';
+import { SPService } from './services/sp';
+//import { Web } from  "@pnp/sp/webs";
 export interface ISrscWebPartProps {
   description: string;
 }
@@ -21,7 +23,8 @@ export default class SrscWebPart extends BaseClientSideWebPart<ISrscWebPartProps
 
   private _isDarkTheme: boolean = false;
   private _environmentMessage: string = '';
-
+  private _usuarioIDLista: number = 0; // Nueva propiedad para almacenar el userId
+  private _usuarioIDDivision: number = 0; // Nueva propiedad para almacenar el userId
   public render(): void {
     /*const element: React.ReactElement<ISrscProps> = React.createElement(
       Srsc,
@@ -33,7 +36,14 @@ export default class SrscWebPart extends BaseClientSideWebPart<ISrscWebPartProps
         userDisplayName: this.context.pageContext.user.displayName,
         context: this.context
       }
-    );*/
+    );
+    React.useEffect(() => {
+    const webBase = Web(this.context.pageContext.web.absoluteUrl);
+    webBase.ensureUser(this.context.pageContext.user.loginName).then(result => {
+      this._userId = result.data.Id; // Guardamos el userId en la propiedad del WebPart
+    }).catch(error => {});
+    }, []);*/
+
 
     const element: React.ReactElement = React.createElement(
     AuthProvider,
@@ -41,12 +51,15 @@ export default class SrscWebPart extends BaseClientSideWebPart<ISrscWebPartProps
       context: this.context,
       // Pasamos explícitamente el hijo dentro de las props para satisfacer a TS
       children: React.createElement(Srsc, {
-        description: this.properties.description,
-        isDarkTheme: this._isDarkTheme,
-        environmentMessage: this._environmentMessage,
-        hasTeamsContext: !!this.context.sdks.microsoftTeams,
-        userDisplayName: this.context.pageContext.user.displayName,
-        context: this.context
+      description: this.properties.description,
+      isDarkTheme: this._isDarkTheme,
+      environmentMessage: this._environmentMessage,
+      hasTeamsContext: !!this.context.sdks.microsoftTeams,
+      userDisplayName: this.context.pageContext.user.displayName,
+      loginName: this.context.pageContext.user.loginName,
+      usuarioIDLista: this._usuarioIDLista,//result.data.Id, // Usamos el ID del usuario obtenido de ensureUser
+      usuarioIDDivision: this._usuarioIDDivision, // Puedes obtener esta información adicionalmente si la necesitas
+      context: this.context
       })
     }
   );
@@ -54,16 +67,33 @@ export default class SrscWebPart extends BaseClientSideWebPart<ISrscWebPartProps
     ReactDom.render(element, this.domElement);
   }
 
-  protected onInit(): Promise<void> {
+  protected async onInit(): Promise<void> {
     this.hideSharePointChrome();
     console.log(`SRSC WebPart Version: ${APP_VERSION}`);
     const link = document.createElement('link');
     link.rel = 'stylesheet';
     link.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css';
     document.head.appendChild(link);
-    return this._getEnvironmentMessage().then(message => {
+    this._environmentMessage = await this._getEnvironmentMessage();
+    try {
+      const spService = new SPService(this.context);
+      const usuarios = await spService.getUsuarios(true);
+      const emailActual = this.context.pageContext.user.email.toLowerCase();
+      
+      const usuarioEncontrado = usuarios.find(u => u.email?.toLowerCase() === emailActual);
+      this._usuarioIDLista = (usuarioEncontrado && usuarioEncontrado.Id) ?? 0;// usuarioEncontrado ? usuarioEncontrado.Id : 0;
+      this._usuarioIDDivision = usuarioEncontrado?.divisionId ?? 0; // Si necesitas la división, la puedes obtener aquí
+
+    } catch (error) {
+      console.error("Error al obtener el ID del usuario en onInit:", error);
+      this._usuarioIDLista = 0;
+      this._usuarioIDDivision = 0;
+    }
+
+  return super.onInit();
+    /*return this._getEnvironmentMessage().then(message => {
       this._environmentMessage = message;
-    });
+    });*/
   }
 
 

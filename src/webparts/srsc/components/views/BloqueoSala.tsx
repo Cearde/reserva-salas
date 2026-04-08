@@ -7,12 +7,16 @@ import { Dropdown, IDropdownOption, DatePicker, PrimaryButton, Stack, Spinner, S
 import styles from '../Srsc.module.scss';
 import { useSPFxContext } from '../../contexts/SPFxContext';
 import * as strings from 'SrscWebPartStrings';
-import { getRestrictedDates,getStatusColor,onFormatDate } from '../../utils/utils';
+import { getRestrictedDates,getStatusColor,onFormatDate,legendItems } from '../../utils/utils';
+import {useAuth} from '../../contexts/AuthContext';
 
 
 
-const BloqueoSala: React.FC<IViewProps> = () => {
+const BloqueoSala: React.FC<IViewProps> = (props) => {
   const context = useSPFxContext();
+  const { isAdmin } = useAuth();
+  const  { usuarioIDLista }  = props;
+  const  { usuarioIDDivision }  = props;
   const spService = React.useMemo(() => new SPService(context), [context]);
 
   // --- State Management (similar to ReservaSala) ---
@@ -41,6 +45,8 @@ const BloqueoSala: React.FC<IViewProps> = () => {
   const [comentarioBloqueo, setComentarioBloqueo] = React.useState<string>('');
   const [isBlocking, setIsBlocking] = React.useState<boolean>(false);
   const [refreshCounter, setRefreshCounter] = React.useState<number>(0);
+  const [imageDimensions, setImageDimensions] = React.useState<{ width: number; height: number } | undefined>(undefined);
+  
   
   // --- Data Fetching Effects (similar to ReservaSala) ---
   React.useEffect(() => {
@@ -184,6 +190,44 @@ const BloqueoSala: React.FC<IViewProps> = () => {
       return 'grey'; // Color de respaldo por si el dato viene mal
   }
 };*/
+  React.useEffect( () => {
+      
+        // 1. Supongamos que ya cargaste tus usuarios en dropdownOptions.usuarios
+        if (usuarios.length > 0 && !selectedUsuario) {
+        // const currentUserId = usuarioIDLista context.pageContext.legacyPageContext.usuarioIDLista;
+    
+          // 3. Verificamos si el usuario actual existe en la lista del dropdown
+          const currentUserOption = usuarios.find(u => Number(u.key) === usuarioIDLista);
+    
+          if (currentUserOption) {
+            setSelectedUsuario(Number(currentUserOption.key));
+          }
+        }
+        
+    
+    }, [usuarios]); 
+
+    React.useEffect( () => {
+        
+          // 1. Supongamos que ya cargaste tus usuarios en dropdownOptions.usuarios
+          if (plantas.length > 0 && !selectedPlanta) {
+           // const currentUserId = usuarioIDLista context.pageContext.legacyPageContext.usuarioIDLista;
+      
+            // 3. Verificamos si el usuario actual existe en la lista del dropdown
+            const currentUserOption = plantas.filter(u => Number(u.key) === usuarioIDDivision);
+      
+            if (currentUserOption) {
+              if(isAdmin) {
+                setPlantas(plantas);
+                setSelectedPlanta(Number(currentUserOption[0].key));
+              }else {
+                setPlantas(currentUserOption);
+                setSelectedPlanta(Number(currentUserOption[0].key));
+              }
+            }
+          }
+          
+      }, [plantas]);
 
   // Get selected piso name for display in the modal
   const selectedPisoName = React.useMemo(() => {
@@ -267,8 +311,38 @@ const BloqueoSala: React.FC<IViewProps> = () => {
           {selectedPisoImageUrl && (
             <div style={{ marginTop: '20px' }}>
               <h3>{strings.PlanoPisoTitle}</h3>
+                {/* LEYENDA DE COLORES */}
+                <Stack 
+                  horizontal 
+                  tokens={{ childrenGap: 20 }} 
+                  style={{ marginBottom: '15px', flexWrap: 'wrap' }}
+                >
+                  {legendItems.map((item, index) => (
+                    <Stack horizontal verticalAlign="center" key={index} tokens={{ childrenGap: 8 }}>
+                      <div 
+                        style={{ 
+                          width: '16px', 
+                          height: '16px', 
+                          backgroundColor: item.color, 
+                          borderRadius: '2px',
+                          border: '1px solid #ccc' 
+                        }} 
+                      />
+                      <span style={{ fontSize: '14px' }}>{item.label}</span>
+                    </Stack>
+                  ))}
+                </Stack>
+
               <div style={{ position: 'relative', display: 'inline-block' }}>
-                <img src={selectedPisoImageUrl} alt={strings.PlanoPisoTitle} style={{ maxWidth: '100%', height: 'auto', border: '1px solid #ccc' }} />
+                <img 
+                  src={selectedPisoImageUrl} 
+                  alt={strings.PlanoPisoTitle} 
+                  style={{ maxWidth: '100%', height: 'auto', border: '1px solid #ccc' }}
+                  onLoad={(e) => {
+                    const img = e.currentTarget;
+                    setImageDimensions({ width: img.naturalWidth, height: img.naturalHeight });
+                  }}
+                 />
                 {salas.map(sala => (
                   <PrimaryButton
                     key={sala.ID}
@@ -276,13 +350,21 @@ const BloqueoSala: React.FC<IViewProps> = () => {
                     onClick={() => handleSalaClick(sala)}
                     disabled={!selectedDate || !selectedPlanta || !selectedPiso || !selectedUsuario || sala.Disponibilidad.toLowerCase() === 'full'} // Disable if no date/planta/piso/usuario or if sala is fully booked
                     title={!selectedDate || !selectedPlanta || !selectedPiso || !selectedUsuario ? strings.SelectPlantaPisoUsuarioFechaBlockWarning : `${strings.BlockRoom} ${sala.Nombre}`}
-                    style={{
+                    /*style={{
                       position: 'absolute',
                       top: `${sala.PosicionY}px`,
                       left: `${sala.PosicionX}px`,
                       transform: 'translate(-50%, -50%)',
                       backgroundColor: getStatusColor(sala.Disponibilidad)
                       // getStatusColor(sala.Disponibilidad),
+                    }}*/
+                   style={{
+                      position: 'absolute',
+                      left: imageDimensions ? `${(sala.PosicionX / imageDimensions.width) * 100}%` : '0',
+                      top: imageDimensions ? `${(sala.PosicionY / imageDimensions.height) * 100}%` : '0',
+                      transform: 'translate(-50%, -50%)',
+                      visibility: imageDimensions ? 'visible' : 'hidden',
+                      backgroundColor: getStatusColor(sala.Disponibilidad)
                     }}
                   />
                 ))}

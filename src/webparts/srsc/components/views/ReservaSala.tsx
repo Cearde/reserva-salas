@@ -8,7 +8,9 @@ import ReservaSalaSchedule from './ReservaSalaSchedule';
 import { useSPFxContext } from '../../contexts/SPFxContext';
 import * as strings from 'SrscWebPartStrings';
 import { useFormDropdownOptions, useSalasByPiso } from '../../hooks/useReservaSalaData';
-import { getRestrictedDates, getStatusColor,onFormatDate  } from '../../utils/utils';
+import { getRestrictedDates, getStatusColor,onFormatDate, legendItems } from '../../utils/utils';
+import {useAuth} from '../../contexts/AuthContext';
+//import { set } from 'date-fns';
 
 // --- State Management with useReducer ---
 
@@ -102,8 +104,12 @@ function reservaSalaReducer(state: ReservaSalaState, action: ReservaSalaAction):
 }
 
 
-const ReservaSala: React.FC<IViewProps> = () => {
+const ReservaSala: React.FC<IViewProps> = (props) => {
   const context = useSPFxContext();
+  const  { usuarioIDLista }  = props;
+  const  { usuarioIDDivision }  = props;
+  const { isAdmin } = useAuth();
+
   const spService = React.useMemo(() => new SPService(context), [context]);
 
   const [state, dispatch] = React.useReducer(reservaSalaReducer, initialState);
@@ -201,6 +207,55 @@ const ReservaSala: React.FC<IViewProps> = () => {
     return pisoOption ? String(pisoOption.text) : 'Desconocido';
   }, [dropdownOptions.pisos, selectedPiso]);
 
+  
+  React.useEffect( () => {
+  
+    // 1. Supongamos que ya cargaste tus usuarios en dropdownOptions.usuarios
+    if (dropdownOptions.usuarios.length > 0 && !selectedUsuario) {
+     // const currentUserId = usuarioIDLista context.pageContext.legacyPageContext.usuarioIDLista;
+
+      // 3. Verificamos si el usuario actual existe en la lista del dropdown
+      const currentUserOption = dropdownOptions.usuarios.find(u => Number(u.key) === usuarioIDLista);
+
+      if (currentUserOption) {
+        dispatch({ 
+          type: 'SET_SELECTED_USUARIO', 
+          payload: Number(currentUserOption.key) 
+        });
+      }
+    }
+    
+
+}, [dropdownOptions.usuarios]); // Se ejecuta cuando la lista de usuarios se carga
+
+
+const filteredPlantaOptions = React.useMemo(() => {
+  if(isAdmin) 
+    return dropdownOptions.plantas;
+  else
+    return dropdownOptions.plantas.filter(p => Number(p.key) === usuarioIDDivision);
+}, [dropdownOptions.plantas, usuarioIDDivision]);
+
+ React.useEffect( () => {
+    
+      // 1. Supongamos que ya cargaste tus usuarios en dropdownOptions.usuarios
+      if (dropdownOptions.plantas.length > 0 && !selectedPlanta) {
+       // const currentUserId = usuarioIDLista context.pageContext.legacyPageContext.usuarioIDLista;
+  
+        // 3. Verificamos si el usuario actual existe en la lista del dropdown
+        const   plantaCorrespondiente = dropdownOptions.plantas.find(u => Number(u.key) === usuarioIDDivision);
+        if (plantaCorrespondiente) {
+          // 3. ¡IMPORTANTE!: Ejecutar el dispatch para actualizar el estado global
+          dispatch({ 
+            type: 'SET_SELECTED_PLANTA', 
+            payload: Number(plantaCorrespondiente.key) 
+          });
+        }
+      }
+      
+  
+  }, [dropdownOptions.plantas, usuarioIDDivision, selectedPlanta]); 
+
   return (
     <div>
       <h2>{strings.ReservaSalaTitle}</h2>
@@ -224,7 +279,7 @@ const ReservaSala: React.FC<IViewProps> = () => {
                 <Dropdown
                   label={strings.PlantaLabel}
                   placeholder={strings.SelectPlantaPlaceholder}
-                  options={dropdownOptions.plantas}
+                  options={filteredPlantaOptions}//{dropdownOptions.plantas}
                   onChange={(e, option) => dispatch({ type: 'SET_SELECTED_PLANTA', payload: option ? Number(option.key) : undefined })}
                   selectedKey={selectedPlanta}
                   required={true}
@@ -253,6 +308,7 @@ const ReservaSala: React.FC<IViewProps> = () => {
                   onChange={(e, option) => dispatch({ type: 'SET_SELECTED_USUARIO', payload: option ? Number(option.key) : undefined })}
                   selectedKey={selectedUsuario}
                   required={true}
+                  //props.userDisplayName
                 />
               </div>
               <div className={`${styles.formGroup} ${styles.formControl}`}>
@@ -279,6 +335,30 @@ const ReservaSala: React.FC<IViewProps> = () => {
           {selectedPisoImageUrl  && selectedPlanta && selectedPiso && selectedUsuario && selectedDate && (
             <div style={{ marginTop: '20px' }}>
               <h3>{strings.PlanoPisoTitle}</h3>
+            {/* LEYENDA DE COLORES */}
+              <Stack 
+                horizontal 
+                tokens={{ childrenGap: 20 }} 
+                style={{ marginBottom: '15px', flexWrap: 'wrap' }}
+              >
+                {legendItems.map((item, index) => (
+                  <Stack horizontal verticalAlign="center" key={index} tokens={{ childrenGap: 8 }}>
+                    <div 
+                      style={{ 
+                        width: '16px', 
+                        height: '16px', 
+                        backgroundColor: item.color, 
+                        borderRadius: '2px',
+                        border: '1px solid #ccc' 
+                      }} 
+                    />
+                    <span style={{ fontSize: '14px' }}>{item.label}</span>
+                  </Stack>
+                ))}
+              </Stack>
+
+
+
               <div style={{ position: 'relative', display: 'inline-block' }}>
                 <img
                   src={selectedPisoImageUrl}

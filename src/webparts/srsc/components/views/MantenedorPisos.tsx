@@ -62,7 +62,8 @@ const MantenedorPisos: React.FC<IViewProps> = () => {
       setPlantas(fetchedPlantas);
     } catch (err) {
       //setError(`Error al cargar datos: ${err.message}`);
-      setMessage({ type: MessageBarType.error, text: `Error al cargar datos: ${err.message}` });
+      const msg = err instanceof Error ? err.message : String(err);
+      setMessage({ type: MessageBarType.error, text: `Error al cargar datos: ${msg}` });
       console.error(err);
     } finally {
       setIsLoading(false);
@@ -75,7 +76,8 @@ const MantenedorPisos: React.FC<IViewProps> = () => {
       setPlanificacionHoras(fetchedHoras);
     } catch (err) {
       //setError(`Error al cargar horarios de planificación: ${err.message}`);
-      setMessage({ type: MessageBarType.error, text: `Error al cargar horarios de planificación: ${err.message}` });
+      const msg = err instanceof Error ? err.message : String(err);
+      setMessage({ type: MessageBarType.error, text: `Error al cargar horarios de planificación: ${msg}` });
       console.error(err);
     }
   }, [spService]);
@@ -120,7 +122,8 @@ const MantenedorPisos: React.FC<IViewProps> = () => {
       console.log(`[MantenedorPisos.tsx] onEditPiso - fetched existing horarios:`, selectedHoras);
     } catch (err) {
       //setError(`Error al cargar horarios del piso: ${err.message}`);
-      setMessage({ type: MessageBarType.error, text: `Error al cargar horarios del piso: ${err.message}` });
+      const msg = err instanceof Error ? err.message : String(err);
+      setMessage({ type: MessageBarType.error, text: `Error al cargar horarios del piso: ${msg}` });
       console.error(err);
       setSelectedHoras([]); // Fallback to empty if error
     } finally {
@@ -154,25 +157,26 @@ const MantenedorPisos: React.FC<IViewProps> = () => {
   };
 
   const confirmDelete = async () => {
-        if (pisoToDelete?.Id) {
-            try {
-                await spService.deletePiso(pisoToDelete.Id);
-                setMessage({ type: MessageBarType.success, text: strings.PisoDeletedSuccess });
-                fetchPisosAndPlantas();
-            } catch (err) {
-                //setError(strings.ErrorDeletingPiso + " " + err.message);
-                setMessage({ type: MessageBarType.error, text: strings.ErrorDeletingPiso + " " + err.message });
-                console.error("Error eliminando piso:", err);
-            } finally {
-                setShowDeleteConfirm(false);
-                setPisoToDelete(undefined);
-            }
-        } else {
-            setMessage({ type: MessageBarType.error, text: strings.CannotDeletePisoWithoutId });
+    if (pisoToDelete?.Id) {
+        try {
+            await spService.deletePiso(pisoToDelete.Id);
+            setMessage({ type: MessageBarType.success, text: strings.PisoDeletedSuccess });
+            fetchPisosAndPlantas();
+        } catch (err) {
+            //setError(strings.ErrorDeletingPiso + " " + err.message);
+            const msg = err instanceof Error ? err.message : String(err);
+            setMessage({ type: MessageBarType.error, text: strings.ErrorDeletingPiso + ": " + msg });
+            console.error("Error eliminando piso:", err);
+        } finally {
             setShowDeleteConfirm(false);
             setPisoToDelete(undefined);
         }
-    };
+    } else {
+        setMessage({ type: MessageBarType.error, text: strings.CannotDeletePisoWithoutId });
+        setShowDeleteConfirm(false);
+        setPisoToDelete(undefined);
+    }
+  };
 
   const onSavePiso = async () => {
     
@@ -191,7 +195,7 @@ const MantenedorPisos: React.FC<IViewProps> = () => {
       errors.Horarios = strings.RequiredField;
     }
 
-    if (filePreviewUrl === undefined || filePreviewUrl === "" || currentPiso?.IMAGEN === undefined) {
+    if (filePreviewUrl === undefined || filePreviewUrl === "" ){ //|| currentPiso?.IMAGEN === undefined) {
       errors.Imagen = strings.RequiredField;
     }
     setFormErrors(errors);
@@ -244,7 +248,8 @@ const MantenedorPisos: React.FC<IViewProps> = () => {
       setIsModalOpen(false);
       await fetchPisosAndPlantas();
     } catch (err) {
-      setMessage({ type: MessageBarType.error, text: `Error al guardar piso: ${err.message}` });
+      const msg = err instanceof Error ? err.message : String(err);
+      setMessage({ type: MessageBarType.error, text: `Error al guardar piso: ${msg}` });
       console.error(err);
     } finally {
       setIsLoading(false);
@@ -266,14 +271,14 @@ const MantenedorPisos: React.FC<IViewProps> = () => {
       };
 
   const columns: IColumn[] = [
-    {
+    /*{
       key: 'idColumn',
       name: 'ID',
       fieldName: 'Id',
       minWidth: 40,
       maxWidth: 60, // Keep a small max-width for ID
       isResizable: true,
-    },
+    },*/
     {
       key: 'titleColumn',
       name: 'Título',
@@ -283,7 +288,7 @@ const MantenedorPisos: React.FC<IViewProps> = () => {
     },
     {
       key: 'plantaColumn',
-      name: 'Planta',
+      name: 'División',
       fieldName: 'PlantaTitle',
       minWidth: 100,
       isResizable: true,
@@ -392,7 +397,7 @@ const MantenedorPisos: React.FC<IViewProps> = () => {
             errorMessage={formErrors.Title}
           />
           <Dropdown
-            label="Planta"
+            label="División"
             required
             options={plantas}
             selectedKey={currentPiso?.PlantaId || null}

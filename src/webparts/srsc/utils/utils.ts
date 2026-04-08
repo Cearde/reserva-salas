@@ -16,6 +16,14 @@ export const getRestrictedDates = (rangeDays: number = 365): Date[] => {
   return restricted;
 };
 
+// Ejemplo de los estados comunes (ajústalos a tus strings y lógica)
+export const legendItems = [
+  { label: 'Disponible', color: '#27AE60' }, // Verde
+  { label: 'Ocupada', color: '#E74C3C' },    // Rojo
+  { label: 'Parcialmente Ocupada', color: '#F1C40F' }, // Naranja
+  { label: 'Bloqueada', color: '#a19f9d' }   // Gris
+];
+
 export const getStatusColor = (disponibilidad: string): string => {
   switch (disponibilidad.toLowerCase()) {
     case 'full':
@@ -25,7 +33,7 @@ export const getStatusColor = (disponibilidad: string): string => {
     case 'partial':
       return '#F1C40F';'yellow';
     default:
-      return 'grey'; // Color de respaldo por si el dato viene mal
+      return '#a19f9d'; // Color de respaldo por si el dato viene mal
   }
 };
 
@@ -40,5 +48,5 @@ export const onFormatDate = (date?: Date): string => {
     const year = date.getFullYear();
     return `${day}-${month}-${year}`;
   };
-export const APP_VERSION = "1.2.0.1"; // Aquí pones la versión de tu package-solution
+export const APP_VERSION = "2.5.0.0"; // Aquí pones la versión de tu package-solution
 

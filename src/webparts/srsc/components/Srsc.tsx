@@ -28,18 +28,21 @@ interface MenuItem {
   text: string;
   view?: string; // The view to render if it's a direct link
   icon?: string; // Optional icon class for the menu item
+  url?: string;
   subItems?: MenuItem[]; // Sub-items for a dropdown menu
+  adminOnly?: boolean; // Flag to indicate if the item is for admins only
 }
 
 const menuItems: MenuItem[] = [
-  { key: 'reservaSala', text: strings.ReservaSalaView, view: strings.ReservaSalaView,  icon :'fa-solid fa-calendar-check'},
-  { key: 'salasDisponibles', text: strings.SalasDisponiblesView, view: strings.SalasDisponiblesView, icon: 'fa-solid fa-chair' },//fa-building
-  { key: 'bloqueoSala', text: strings.BloqueoSalaView, view: strings.BloqueoSalaView , icon: 'fa-solid fa-user-lock' }, //fa-user-lock
-  { key: 'generarQR', text: strings.GenerarQRView, view: strings.GenerarQRView, icon: 'fa-solid fa-qrcode' },
-  { key: 'reportes', text: strings.ReportesView, view: strings.ReportesView, icon: 'fa-solid fa-chart-bar' },
+  { key: 'reservaSala', text: strings.ReservaSalaView, view: strings.ReservaSalaView,  icon :'fa-solid fa-calendar-check', adminOnly: false },
+  { key: 'salasDisponibles', text: strings.SalasDisponiblesView, view: strings.SalasDisponiblesView, icon: 'fa-solid fa-chair', adminOnly: false },//fa-building
+  { key: 'bloqueoSala', text: strings.BloqueoSalaView, view: strings.BloqueoSalaView , icon: 'fa-solid fa-user-lock', adminOnly: false }, //fa-user-lock
+  { key: 'generarQR', text: strings.GenerarQRView, view: strings.GenerarQRView, icon: 'fa-solid fa-qrcode', adminOnly: true},
+  { key: 'reportes', text: strings.ReportesView, view: strings.ReportesView, icon: 'fa-solid fa-chart-bar' , adminOnly: false},
   {
     key: 'mantenedores',
     text: strings.MantenedorView, icon: 'fa-solid fa-tools',
+    adminOnly: true,
     subItems: [
       { key: 'mantenedorDivisiones', text: strings.MantenedorDivisionesView, view: strings.MantenedorDivisionesView },
       { key: 'mantenedorPisos', text: strings.MantenedorPisosView, view: strings.MantenedorPisosView }, // New item
@@ -48,6 +51,7 @@ const menuItems: MenuItem[] = [
       { key: 'mantenedorVicepresidencias', text: strings.MantenedorVicepresidenciasView, view: strings.MantenedorVicepresidenciasView }, // New item
       { key: 'mantenedorGerencia', text: strings.MantenedorGerenciaView, view: strings.MantenedorGerenciaView }, // New item
       { key: 'mantenedorUsuarios', text: strings.MantenedorUsuariosView, view: strings.MantenedorUsuariosView },
+      { key:'contenidos', text: 'Contenido del Sitio', view: '', url: '/_layouts/15/viewlsts.aspx?view=14'}, // Example of a non-view item
       { key: 'version', text: 'V. ' + APP_VERSION, view: '' },
     ],
   },
@@ -74,33 +78,33 @@ const Srsc: React.FC<ISrscProps> = (props) => {
   const renderView = (): JSX.Element => {
     switch (currentView) {
       case strings.ReservaSalaView:
-        return <ReservaSala />;
+        return <ReservaSala {... props}/>;
       case strings.SalasDisponiblesView:
-        return <SalasDisponibles />;
+        return <SalasDisponibles {... props}/>;
       case strings.BloqueoSalaView:
-        return <BloqueoSala />;
+        return <BloqueoSala {... props}/>;
       case strings.GenerarQRView:
         return <GenerarQR />;
       case strings.ReportesView:
-        return <Reportes />;
+        return <Reportes {... props}/>;
       case strings.MantenedorPisosView: // New case
-        return <MantenedorPisos />;
+        return <MantenedorPisos {... props}{... props}/>;
       case strings.MantenedorHorariosView:
-        return <MantenedorHorarios />;
+        return <MantenedorHorarios {... props}/>;
       case strings.MantenedorUsuariosView:
-        return <MantenedorUsuarios />;
+        return <MantenedorUsuarios {... props}/>;
       case strings.MantenedorSalasView:
-        return <MantenedorSalas />;
+        return <MantenedorSalas {... props}/>;
       case strings.MantenedorVicepresidenciasView: // New case
-        return <MantenedorVicepresidencias />;
+        return <MantenedorVicepresidencias {... props}/>;
       case strings.MantenedorGerenciaView: // New case
-        return <MantenedorGerencia />;
+        return <MantenedorGerencia {... props}/>;
       case strings.MantenedorDivisionesView:
         return <MantenedorDivisiones />;
       default:
         // Fallback to a default view if currentView is somehow not in menuItems
         // This case should ideally not be reached with proper type handling
-        return <ReservaSala />;
+        return <ReservaSala {... props}/>;
     }
   };
 
@@ -167,8 +171,14 @@ const Srsc: React.FC<ISrscProps> = (props) => {
                               key={subItem.key}
                               className={`${styles.navButton} ${currentView === subItem.view ? styles.active : ''}`}
                               onClick={() => {
-                                onItemClick(subItem.view as View);// setCurrentView(subItem.view as View);
-                                setIsMantenedoresOpen(false); // Close dropdown after selection
+                                if(subItem.url) {
+                                  window.open(props.context.pageContext.site.absoluteUrl + subItem.url, '_blank');
+                                  console.log('Abriendo URL:', subItem.url);
+                                  return;
+                                }else{
+                                  onItemClick(subItem.view as View);// setCurrentView(subItem.view as View);
+                                  setIsMantenedoresOpen(false); // Close dropdown after selection
+                                }
                               }}
                             >
                               {subItem.text}
@@ -179,24 +189,26 @@ const Srsc: React.FC<ISrscProps> = (props) => {
                     </div>
                   );
                 } else {
-                  return (
-                    <button
-                      key={item.key}
-                      className={`${styles.navButton} ${currentView === item.view ? styles.active : ''}`}
-                      onClick={() => onItemClick(item.view as View)}//setCurrentView(item.view as View)}
-                    >
-                      
-                        {item.icon && (
-                          item.icon.indexOf('fa-') > -1 ? (
-                            <i className={item.icon} style={{ marginRight: '8px' }}></i>
-                          ) : (
-                            <Icon iconName={item.icon} style={{ marginRight: '8px' }} />
-                          )
-                        )}
+                  if ( (isAdmin) || (!item.adminOnly && !isAdmin) ) {
+                    return (
+                      <button
+                        key={item.key}
+                        className={`${styles.navButton} ${currentView === item.view ? styles.active : ''}`}
+                        onClick={() => onItemClick(item.view as View)}//setCurrentView(item.view as View)}
+                      >
+                        
+                          {item.icon && (
+                            item.icon.indexOf('fa-') > -1 ? (
+                              <i className={item.icon} style={{ marginRight: '8px' }}></i>
+                            ) : (
+                              <Icon iconName={item.icon} style={{ marginRight: '8px' }} />
+                            )
+                          )}
 
-                      {item.text}
-                    </button>
-                  );
+                        {item.text}
+                      </button>
+                    );
+                  }
                 }
               })} 
           </nav>

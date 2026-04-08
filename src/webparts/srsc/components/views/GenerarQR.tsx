@@ -264,7 +264,8 @@ React.useEffect(() => {
                         }); 
       setQrCodes(generatedQRs);
     } catch (err) {
-      setMessage(`Error al generar QR individual: ${err.message}`);
+      const msg = err instanceof Error ? err.message : String(err);
+      setMessage(`Error al generar QR individual: ${msg}`);
     } finally {
       setLoading(false);
     }

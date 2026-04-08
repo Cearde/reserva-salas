@@ -30,7 +30,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode, context: WebPar
                 // Check if the user is in the specific admin group
                 const adminStatus = await spService.isCurrentUserInGroup('SRSC_ADMINISTRADOR');
                 const usuarios= await spService.getUsuarios(true);
-                const usuarioValido = usuarios.filter(usuario => usuario.secondaryText.toLowerCase() === context.pageContext.user.loginName.toLowerCase() && usuario.activo).length > 0;
+                const usuarioValido = usuarios.filter(usuario => usuario.email.toLowerCase() === context.pageContext.user.loginName.toLowerCase() && usuario.activo).length > 0;
                 setIsAdmin(adminStatus);
                 setIsUserValido(usuarioValido);
             } catch (error: unknown) {

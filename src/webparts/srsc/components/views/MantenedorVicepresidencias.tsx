@@ -107,7 +107,8 @@ const MantenedorVicepresidencias: React.FC<IViewProps> = () => {
                 fetchVicepresidencias();
             } catch (err) {
                 //setError(strings.ErrorDeletingVicepresidencia + " " + err.message);
-                setMessage({ type: MessageBarType.error, text: strings.ErrorDeletingVicepresidencia });
+                const msg = err instanceof Error ? err.message : String(err);
+                setMessage({ type: MessageBarType.error, text: strings.ErrorDeletingVicepresidencia + ": " + msg });
                 console.error("Error eliminando vicepresidencia:", err);
             } finally {
                 setShowDeleteConfirm(false);
@@ -184,14 +185,14 @@ const MantenedorVicepresidencias: React.FC<IViewProps> = () => {
   };
 
   const columns: IColumn[] = [
-    {
+    /*{
       key: 'idColumn',
       name: 'ID',
       fieldName: 'Id',
       minWidth: 40,
       maxWidth: 60, // Keep ID small
       isResizable: true,
-    },
+    },*/
     {
       key: 'titleColumn',
       name: strings.VicepresidenciaNameLabel,

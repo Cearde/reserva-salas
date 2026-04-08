@@ -64,6 +64,13 @@ const MantenedorSalas: React.FC<IViewProps> = () => {
   const [salaCapacityError, setSalaCapacityError] = React.useState<string | undefined>(undefined);
   const [titleError, setTitleError] = React.useState<string | undefined>(undefined);
 
+
+  ///VER QR
+  const [isQRModalOpen, setIsQRModalOpen] = React.useState<boolean>(false);
+  const [qrImageUrl, setQrImageUrl] = React.useState<string | undefined>(undefined);
+  const [selectedSalaName, setSelectedSalaName] = React.useState<string>("");
+
+
   const fetchSalas = React.useCallback(async () => {
     setLoading(true);
     setError(undefined);
@@ -205,6 +212,66 @@ const MantenedorSalas: React.FC<IViewProps> = () => {
     setSalaCapacityError(undefined);
   };
 
+  const handleVerQRClick = async (sala: ISPSalaItem): Promise<void> => {
+    // Construye la URL. Ajusta 'QRSalas' al nombre real de tu biblioteca
+    // y la extensión (.png, .jpg) según corresponda.
+    //const siteUrl = context.pageContext.web.absoluteUrl;
+    
+    const imageUrl = await spService.getQR(sala.Id, sala.PISOId);
+    
+    //`${siteUrl}/LO_QRPUESTOS/${sala.planta}/${sala.Title}/QR_Sala_${sala.Title}.png`; 
+
+    const fullUrl = `${window.location.origin}${imageUrl}`;
+
+    setSelectedSalaName(sala.Title);
+    setQrImageUrl(fullUrl);
+    setIsQRModalOpen(true);
+
+  };
+
+  const descargarQR = async () => {
+    if (!qrImageUrl) return;
+
+    try {
+      // Para evitar problemas de CORS al descargar, lo ideal es convertir a Blob
+      const response = await fetch(qrImageUrl);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `QR_${selectedSalaName}.png`; // Nombre del archivo
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error al descargar la imagen:", error);
+      // Fallback simple si el fetch falla por CORS
+      window.open(qrImageUrl, '_blank');
+    }
+  };
+
+  const imprimirSoloQR = () => {
+    const ventanaImpresion = window.open('', '_blank');
+    if (ventanaImpresion) {
+      ventanaImpresion.document.write(`
+        <html>
+          <head>
+            <title>Imprimir QR - ${selectedSalaName}</title>
+            <style>
+              body { display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+              img { max-width: 100%; height: auto; }
+            </style>
+          </head>
+          <body onload="window.print();window.close()">
+            <img src="${qrImageUrl}" />
+          </body>
+        </html>
+      `);
+      ventanaImpresion.document.close();
+    }
+  };
   /*
   const handleDeleteClick = async (salaId: number, salaName: string): Promise<void> => {
     if (window.confirm(strings.ConfirmDeleteSala.replace('{0}', salaName))) {
@@ -229,25 +296,26 @@ const MantenedorSalas: React.FC<IViewProps> = () => {
           setShowDeleteConfirm(true);
       };
   
-      const confirmDelete = async () => {
-          if (salaToDelete?.Id) {
-              try {
-                  await spService.deleteSala(salaToDelete.Id);
-                  setMessage({ type: MessageBarType.success, text: strings.SalaDeletedSuccess });
-                  fetchSalas();
-              } catch (err) {
-                  setError(strings.ErrorDeletingSala + " " + err.message);
-                  console.error("Error deleting sala:", err);
-              } finally {
-                  setShowDeleteConfirm(false);
-                  setSalaToDelete(undefined);
-              }
-          } else {
-              setMessage({ type: MessageBarType.error, text: strings.CannotDeleteSalaWithoutId });
+  const confirmDelete = async () => {
+      if (salaToDelete?.Id) {
+          try {
+              await spService.deleteSala(salaToDelete.Id);
+              setMessage({ type: MessageBarType.success, text: strings.SalaDeletedSuccess });
+              fetchSalas();
+          } catch (err) {
+              const msg = err instanceof Error ? err.message : String(err);
+              setError(strings.ErrorDeletingSala + " " + msg);
+              console.error("Error deleting sala:", err);
+          } finally {
               setShowDeleteConfirm(false);
               setSalaToDelete(undefined);
           }
-      };
+      } else {
+          setMessage({ type: MessageBarType.error, text: strings.CannotDeleteSalaWithoutId });
+          setShowDeleteConfirm(false);
+          setSalaToDelete(undefined);
+      }
+  };
 
   const handleSave = async (): Promise<void> => {
     if (!validateForm() || !currentSala) {
@@ -280,7 +348,8 @@ const MantenedorSalas: React.FC<IViewProps> = () => {
       void fetchSalas(); // Refresh the list
     } catch (err) {
       console.error("Error saving sala:", err);
-      setError((currentSala?.Id ? strings.ErrorUpdatingSala : strings.ErrorAddingSala) + " " + err.message);
+      const msg = err instanceof Error ? err.message : String(err);
+      setError((currentSala?.Id ? strings.ErrorUpdatingSala : strings.ErrorAddingSala) + " " + msg);
       //setMessageType(MessageBarType.error);
     } finally {
       setLoading(false);
@@ -330,8 +399,19 @@ const MantenedorSalas: React.FC<IViewProps> = () => {
 
 
   const columns: IColumn[] = [
-    { key: 'name', name: strings.SalaNameLabel, fieldName: 'Title', minWidth: 150, isResizable: true },
-    { key: 'piso', name: strings.SalaPisoLabel, fieldName: 'PISOId', minWidth: 100, isResizable: true, isMultiline:true,
+    { key: 'name', name: strings.SalaNameLabel, fieldName: 'Title', minWidth: 250, maxWidth: 260, isResizable: true }, 
+    { key: 'division', name: strings.DivisionLabel, fieldName: 'PISOId', minWidth: 150, maxWidth: 160, isResizable: true, isMultiline:true,
+      onRender: (item: ISPSalaItem) => {
+        if (item.PISOId === undefined) return 'N/A'; // Handle undefined PISOId
+        const piso = pisos.find(p => p.key === item.PISOId);
+        const divisionId = piso ? piso.data?.plantaId : item.PISOId;
+        return plantas.find(planta => planta.key === divisionId)?.text || divisionId;
+
+        //return piso ? piso.data?.plantaId : item.PISOId;
+      }
+    },
+      //setSelectedPlantaInModal(pisos.find(p => Number(p.key) === sala.PISOId)?.data?.plantaId);
+    { key: 'piso', name: strings.SalaPisoLabel, fieldName: 'PISOId', minWidth: 150, maxWidth: 160, isResizable: true, isMultiline:true,
       onRender: (item: ISPSalaItem) => {
         if (item.PISOId === undefined) return 'N/A'; // Handle undefined PISOId
         const piso = pisos.find(p => p.key === item.PISOId);
@@ -344,9 +424,12 @@ const MantenedorSalas: React.FC<IViewProps> = () => {
       onRender: (item: ISPSalaItem) => (item.activo ? 'Sí' : 'No')
     },
     {
-      key: 'actions', name: strings.AccionesColumn, minWidth: 100, isResizable: true,
+      key: 'actions', name: strings.AccionesColumn, minWidth: 150, isResizable: true,
       onRender: (item: ISPSalaItem) => (
         <Stack horizontal tokens={{ childrenGap: 5 }} wrap>
+          <TooltipHost content={strings.VerQR}>
+            <IconButton iconProps={{ iconName: 'QRCode' }} onClick={() => handleVerQRClick(item)} />
+          </TooltipHost>
           <TooltipHost content={strings.EditSalaButton}>
             <IconButton iconProps={{ iconName: 'Edit' }} onClick={() => handleEditClick(item)} />
           </TooltipHost>
@@ -564,24 +647,73 @@ const MantenedorSalas: React.FC<IViewProps> = () => {
         </DialogFooter>
       </Dialog>
       <Dialog
-              hidden={!showDeleteConfirm}
-              onDismiss={() => setShowDeleteConfirm(false)}
-              dialogContentProps={{
-                  type: DialogType.normal,
-                  title: strings.ConfirmDeleteSala.replace('{0}', salaToDelete?.Title || ''),
-                  //subText: strings.ConfirmDeleteDivision.replace('{0}', divisionToDelete?.Title || '')
-              }}
-              modalProps={{
-                  isBlocking: true,
-                  styles: { main: { maxWidth: 450 } }
-              }}
-          >
-              <DialogFooter>
-                  <PrimaryButton onClick={confirmDelete} text={strings.DeleteSalaButton} />
-                  <DefaultButton onClick={handleCancel} text={strings.CancelButton} />
-              </DialogFooter>
-          </Dialog>
+            hidden={!showDeleteConfirm}
+            onDismiss={() => setShowDeleteConfirm(false)}
+            dialogContentProps={{
+                type: DialogType.normal,
+                title: strings.ConfirmDeleteSala.replace('{0}', salaToDelete?.Title || ''),
+                //subText: strings.ConfirmDeleteDivision.replace('{0}', divisionToDelete?.Title || '')
+            }}
+            modalProps={{
+                isBlocking: true,
+                styles: { main: { maxWidth: 450 } }
+            }}
+        >
+            <DialogFooter>
+                <PrimaryButton onClick={confirmDelete} text={strings.DeleteSalaButton} />
+                <DefaultButton onClick={handleCancel} text={strings.CancelButton} />
+            </DialogFooter>
+        </Dialog>
+
+        {/* Modal para visualizar el QR */}
+        <Dialog
+          hidden={!isQRModalOpen}
+          onDismiss={() => setIsQRModalOpen(false)}
+          dialogContentProps={{
+            type: DialogType.normal,
+            title: `Código QR - ${selectedSalaName}`
+          }}
+          modalProps={{ isBlocking: false }}
+        >
+          <Stack horizontalAlign="center" tokens={{ childrenGap: 20 }} style={{ marginTop: '10px' }}>
+            {qrImageUrl ? (
+              <img 
+                src={qrImageUrl} 
+                alt={`QR ${selectedSalaName}`} 
+                style={{ width: '250px', height: '250px', border: '1px solid #eee' }}
+                onError={(e) => {
+                  // Si la imagen no existe, podrías mostrar un placeholder o error
+                  (e.target as HTMLImageElement).src = 'https://via.placeholder.com/250?text=QR+No+Encontrado';
+                }}
+              />
+            ) : (
+              <Spinner size={SpinnerSize.large} />
+            )}
+          </Stack>
+          <DialogFooter>
+            
+            {/* Botón de Descarga */} 
+            <PrimaryButton
+              onClick={descargarQR} 
+              iconProps={{ iconName: 'Download' }} 
+              text="Descargar" 
+            />
+            {/* Botón de Impresión Limpia */}
+            <DefaultButton 
+              onClick={imprimirSoloQR} 
+              iconProps={{ iconName: 'Print' }} 
+              text="Imprimir" 
+            />
+
+            <DefaultButton 
+              onClick={() => setIsQRModalOpen(false)} 
+              text={strings.CloseButton || "Cerrar"} 
+            />
+          </DialogFooter>
+        </Dialog>
     </div>
+
+    
   );
 };
 

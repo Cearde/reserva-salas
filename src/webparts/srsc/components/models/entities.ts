@@ -223,11 +223,16 @@ export interface ISPUsuarioItem {
   Id: number;
   activo: boolean;
   USUARIO: {
-    id: string;
+    Id: number;
+    Name: string;
     Title: string;
     EMail: string;
   };
-  VICEPRESIDENCIA: {
+ /* VICEPRESIDENCIA: {
+    Id: number;
+    Title: string;
+  };*/
+   division: {
     Id: number;
     Title: string;
   };
@@ -235,19 +240,25 @@ export interface ISPUsuarioItem {
     Id: number;
     Title: string;
   };
+  esAdmin: boolean;
 }
 
 // Item used in the component for LM_USUARIOS
 export interface IUsuarioItem {
   Id?: number; // Optional for new items
-  id: string;
+  usuarioId: number;
+  LoginName: string;
   text: string;
-  secondaryText: string;
-  VicepresidenciaId: number;
-  VicepresidenciaTitle?: string;
+  email: string;
+  //secondaryText: string;
+  //VicepresidenciaId: number;
+  //VicepresidenciaTitle?: string;
   GerenciaId: number;
   GerenciaTitle?: string;
   activo: boolean;
+  esAdmin: boolean;
+  divisionId?: number;
+  divisionTitle?: string;
 }
 
 export interface Iperson { 

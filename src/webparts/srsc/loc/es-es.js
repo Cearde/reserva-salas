@@ -123,6 +123,7 @@ define([], function() {
     "MantenedorSalasTitle": "Mantenedor de Salas",
     "AddSalaButton": "Agregar Sala",
     "EditSalaButton": "Editar Sala",
+    "VerQR": "Ver QR",
     "DeleteSalaButton": "Eliminar Sala",
     "SalaNameLabel": "Nombre de la Sala",
     "SalaCupoLabel": "Cupo",
@@ -192,6 +193,7 @@ define([], function() {
     "DeleteGerenciaButton": "Eliminar Gerencia",
     "LoadingGerencias": "Cargando gerencias...",
     "NoGerenciasFound": "No se encontraron gerencias.",
+    "GerenciaLabel": "Gerencia",
 
     // Mantenedor Usuarios
     "AddUserButton": "Nuevo Usuario",
@@ -215,7 +217,13 @@ define([], function() {
     "ErrorAddingUsuario": "Error al agregar el usuario.",
     "UsuarioUpdatedSuccess": "Usuario actualizado correctamente.",
     "UsuarioAddedSuccess": "Usuario agregado correctamente.",
-    "UsuarioDeleteButton": "Eliminar Usuario",
+    "UsuarioDeleteButton": "Eliminar Usuario", 
+    "UsuarioActivoLabel": "Acitvo",
+    "GerenciaLabel": "Gerencia",
+    "DivisionLabel": "División",
+    "GerenciaVicepresidenciaLabel": "Vicepresidencia",
+    "SelectDivisionPlaceholder": "Seleccione una división",
+    "UsuarioROLLabel": "ROL",
 
     // Mantenedor Divisiones
     "MantenedorDivisionesView": "Mantenedor de Divisiones",

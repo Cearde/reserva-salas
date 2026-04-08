@@ -7,4 +7,7 @@ export interface ISrscProps {
   hasTeamsContext: boolean;
   userDisplayName: string;
   context: WebPartContext;
+  loginName: string;
+  usuarioIDLista: number; // Agregamos el userId como opcional, se establecerá después de obtenerlo
+  usuarioIDDivision: number;
 }

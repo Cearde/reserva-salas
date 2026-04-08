@@ -49,7 +49,8 @@ const MantenedorDivisiones: React.FC = () => {
             const items = await spService.getDivisiones(true); // Fetch all, including inactive
             setDivisiones(items);
         } catch (err) {
-            setMessage({ type: MessageBarType.error, text: strings.ErrorFetchingDivisiones + " " + err.message });
+            const msg = err instanceof Error ? err.message : String(err);
+            setMessage({ type: MessageBarType.error, text: strings.ErrorFetchingDivisiones + " " + msg });
             //setTitleError(strings.ErrorFetchingDivisiones);
             console.error("Error fetching divisiones:", err);
         } finally {
@@ -95,7 +96,8 @@ const MantenedorDivisiones: React.FC = () => {
                 fetchDivisiones();
             } catch (err) {
                 //setTitleError(strings.ErrorDeletingDivision + " " + err.message);
-                setMessage({ type: MessageBarType.error, text: strings.ErrorDeletingDivision + " " + err.message });
+                const msg = err instanceof Error ? err.message : String(err);
+                setMessage({ type: MessageBarType.error, text: strings.ErrorDeletingDivision + " " + msg });
                 console.error("Error eliminando division:", err);
             } finally {
                 setShowDeleteConfirm(false);
@@ -143,14 +145,14 @@ const MantenedorDivisiones: React.FC = () => {
     };
 
     const columns: IColumn[] = [
-        {
+       /* {
             key: 'column1',
             name: 'ID',
             fieldName: 'Id',
             minWidth: 40,
             maxWidth: 60, // Keep ID small
             isResizable: true
-        },
+        },*/
         {
             key: 'column2',
             name: strings.DivisionNameLabel,
