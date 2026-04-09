@@ -373,6 +373,39 @@ public async addUserInGroup(groupName: string, userEmail: string): Promise<any> 
     }
   }
 
+   public async deleteReservasParaSala(id: number): Promise<void> {
+
+    const listName = 'LO_PUESTORESERVADO';
+    const apiUrl = `${this.context.pageContext.web.absoluteUrl}/_api/web/lists/getbytitle('${listName}')/items(${id})`;
+
+    const spHttpClientOptions = {
+      headers: {
+        'Accept': 'application/json;odata=nometadata',
+        'odata-version': '3.0',
+        'IF-MATCH': '*', // Required for delete
+        'X-HTTP-Method': 'DELETE' // Required for delete
+      }
+    };
+
+    try {
+
+      const response: SPHttpClientResponse = await this.context.spHttpClient.post(
+        apiUrl,
+        SPHttpClient.configurations.v1,
+        spHttpClientOptions
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error(`Error deleting reserva:`, errorData);
+        throw new Error(`Could not delete reserva. Status: ${response.statusText}`);
+      }
+    } catch (error) {
+      console.error(`Exception while deleting reserva:`, error);
+      throw error;
+    }
+   };
+
   public async getReservasParaSala(salaId: number, fecha: Date): Promise<IExistingReservation[]> {
     const listName = 'LO_PUESTORESERVADO';
 
@@ -685,7 +718,7 @@ public async addUserInGroup(groupName: string, userEmail: string): Promise<any> 
     }
   }
 
-  public async getReportData(filters: { startDate?: Date, endDate?: Date, pisoId?: number }): Promise<IReservationReportItem[]> { // Return raw SP items
+  public async getReportData(filters: { startDate?: Date, endDate?: Date, pisoId?: number, usuarioId?: number }): Promise<IReservationReportItem[]> { // Return raw SP items
     const listName = 'LO_PUESTORESERVADO';
     const filterParts: string[] = [];
     
@@ -701,10 +734,14 @@ public async addUserInGroup(groupName: string, userEmail: string): Promise<any> 
         filterParts.push(`PISOId eq ${filters.pisoId}`);
     }
 
+    if (filters.usuarioId) {
+        filterParts.push(`USUARIOId eq ${filters.usuarioId}`);
+    }
+
     const filterQuery = filterParts.join(' and ');
 
     const apiUrl = `${this.context.pageContext.web.absoluteUrl}/_api/web/lists/getbytitle('${listName}')/items?` +
-      `$select=Id,FECHAINICIORESERVA,FECHATERMINORESERVA,PISO/Title,PISO/ID,ESTADO,HORARESERVADA,FECHASALIDA,FECHAENTRADA,PUESTO/Title,PUESTO/ID,USUARIO/Title,USUARIO/ID` +
+      `$select=Id,FECHAINICIORESERVA,FECHATERMINORESERVA,PISO/Title,PISO/IMAGEN,PISO/ID,ESTADO,HORARESERVADA,FECHASALIDA,FECHAENTRADA,PUESTO/Title,PUESTO/COORDENADA,PUESTO/ID,USUARIO/Title,USUARIO/ID` +
       `&$expand=PISO,PUESTO,USUARIO` +
       (filterQuery ? `&$filter=${filterQuery}` : '') +
       `&$orderby=FECHAINICIORESERVA desc&$top=500`; // Add a $top to prevent massive data returns
@@ -1832,11 +1869,14 @@ public async getQR(salaID:number = 1, pisoId:number = 1): Promise<string> {
   }
 
   // CRUD operations for LM_USUARIOS
-  public async getUsuarios(includeInactive: boolean = false): Promise<IUsuarioItem[]> {
+  public async getUsuarios(includeInactive: boolean = false, plantaId?: number): Promise<IUsuarioItem[]> {
     const listName = 'LM_USUARIOS';
     let filter = '';
-    if (!includeInactive) {
-      filter = `&$filter=activo eq 1`;
+    /*if (!includeInactive) {
+      filter = '`&$filter=activo eq 1`';
+    }*/
+    if (plantaId !== undefined) {
+      filter += `&$filter= divisionId eq ${plantaId}`;
     }
     const apiUrl = `${this.context.pageContext.web.absoluteUrl}/_api/web/lists/getbytitle('${listName}')/items?$select=Id,activo,esAdmin,USUARIO/Id,USUARIO/Name,USUARIO/Title,USUARIO/EMail,division/Id,division/Title,GERENCIA/Id,GERENCIA/Title&$expand=USUARIO,division,GERENCIA${filter}`;
 

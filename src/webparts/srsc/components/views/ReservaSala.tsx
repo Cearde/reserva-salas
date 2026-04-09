@@ -203,11 +203,17 @@ const ReservaSala: React.FC<IViewProps> = (props) => {
 
   // Get selected piso name for display in the schedule modal
   const selectedPisoName = React.useMemo(() => {
-    const pisoOption = dropdownOptions.pisos.find(piso => piso.key === selectedPiso);
-    return pisoOption ? String(pisoOption.text) : 'Desconocido';
+  const pisoOption = dropdownOptions.pisos.find(piso => piso.key === selectedPiso);
+  return pisoOption ? String(pisoOption.text) : 'Desconocido';
   }, [dropdownOptions.pisos, selectedPiso]);
 
-  
+  const filteredUsuarioOptions = React.useMemo(() => {
+  if(isAdmin) 
+    return dropdownOptions.usuarios;
+  else
+    return dropdownOptions.usuarios.filter(u => Number(u.key) === usuarioIDLista);
+}, [dropdownOptions.usuarios, usuarioIDLista]);
+
   React.useEffect( () => {
   
     // 1. Supongamos que ya cargaste tus usuarios en dropdownOptions.usuarios
@@ -239,9 +245,7 @@ const filteredPlantaOptions = React.useMemo(() => {
  React.useEffect( () => {
     
       // 1. Supongamos que ya cargaste tus usuarios en dropdownOptions.usuarios
-      if (dropdownOptions.plantas.length > 0 && !selectedPlanta) {
-       // const currentUserId = usuarioIDLista context.pageContext.legacyPageContext.usuarioIDLista;
-  
+      if (dropdownOptions.plantas.length > 0 && !selectedPlanta) {  
         // 3. Verificamos si el usuario actual existe en la lista del dropdown
         const   plantaCorrespondiente = dropdownOptions.plantas.find(u => Number(u.key) === usuarioIDDivision);
         if (plantaCorrespondiente) {
@@ -263,6 +267,7 @@ const filteredPlantaOptions = React.useMemo(() => {
         <Spinner size={SpinnerSize.large} label={strings.LoadingConfig} />
       ) : (
         <div className={styles.viewContent}>
+          <span className={styles.camposObligatoriosTitle}>{strings.camposObligatoriosTitle}</span>
           {message && (
             <MessageBar
               messageBarType={messageType}
@@ -304,7 +309,7 @@ const filteredPlantaOptions = React.useMemo(() => {
                 <Dropdown
                   label={strings.UsuarioLabel}
                   placeholder={strings.SelectUsuarioPlaceholder}
-                  options={dropdownOptions.usuarios}
+                  options= {filteredUsuarioOptions}//{dropdownOptions.usuarios}
                   onChange={(e, option) => dispatch({ type: 'SET_SELECTED_USUARIO', payload: option ? Number(option.key) : undefined })}
                   selectedKey={selectedUsuario}
                   required={true}

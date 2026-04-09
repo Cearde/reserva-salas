@@ -11,6 +11,7 @@ import SalasDisponibles from './views/SalasDisponibles';
 import BloqueoSala from './views/BloqueoSala';
 import GenerarQR from './views/GenerarQR';
 import Reportes from './views/Reportes';
+import MisReservas from './views/MisReservar';
 import MantenedorHorarios from './views/MantenedorHorarios';
 import MantenedorUsuarios from './views/MantenedorUsuarios';
 import MantenedorSalas from './views/MantenedorSalas';
@@ -36,9 +37,10 @@ interface MenuItem {
 const menuItems: MenuItem[] = [
   { key: 'reservaSala', text: strings.ReservaSalaView, view: strings.ReservaSalaView,  icon :'fa-solid fa-calendar-check', adminOnly: false },
   { key: 'salasDisponibles', text: strings.SalasDisponiblesView, view: strings.SalasDisponiblesView, icon: 'fa-solid fa-chair', adminOnly: false },//fa-building
-  { key: 'bloqueoSala', text: strings.BloqueoSalaView, view: strings.BloqueoSalaView , icon: 'fa-solid fa-user-lock', adminOnly: false }, //fa-user-lock
+  { key: 'bloqueoSala', text: strings.BloqueoSalaView, view: strings.BloqueoSalaView , icon: 'fa-solid fa-user-lock', adminOnly: true }, //fa-user-lock
+  { key: 'misReservas', text: strings.MisReservasView, view: strings.MisReservasView, icon: 'fa-solid fa-calendar-alt', adminOnly: false }, //fa-calendar-alt
   { key: 'generarQR', text: strings.GenerarQRView, view: strings.GenerarQRView, icon: 'fa-solid fa-qrcode', adminOnly: true},
-  { key: 'reportes', text: strings.ReportesView, view: strings.ReportesView, icon: 'fa-solid fa-chart-bar' , adminOnly: false},
+  { key: 'reportes', text: strings.ReportesView, view: strings.ReportesView, icon: 'fa-solid fa-chart-bar' , adminOnly: true},
   {
     key: 'mantenedores',
     text: strings.MantenedorView, icon: 'fa-solid fa-tools',
@@ -64,6 +66,7 @@ type View =
   typeof strings.BloqueoSalaView |
   typeof strings.GenerarQRView |
   typeof strings.ReportesView |
+  typeof strings.MisReservasView |
   typeof strings.MantenedorPisosView | // New view type
   typeof strings.MantenedorHorariosView |
   typeof strings.MantenedorUsuariosView |
@@ -87,6 +90,8 @@ const Srsc: React.FC<ISrscProps> = (props) => {
         return <GenerarQR />;
       case strings.ReportesView:
         return <Reportes {... props}/>;
+      case strings.MisReservasView:
+        return <MisReservas {... props}/>;
       case strings.MantenedorPisosView: // New case
         return <MantenedorPisos {... props}{... props}/>;
       case strings.MantenedorHorariosView:
@@ -108,7 +113,7 @@ const Srsc: React.FC<ISrscProps> = (props) => {
     }
   };
 
-  const { isAdmin, isUserValido } = useAuth();
+  const { isAdmin, isUserValido, isAuthLoading } = useAuth();
 
   const onItemClick = (item: View): void => {
   // Si el usuario hace clic en 'version', simplemente retornamos y no hacemos nada
@@ -122,6 +127,33 @@ const Srsc: React.FC<ISrscProps> = (props) => {
     setCurrentView(item);
   }
   };
+
+  if (isAuthLoading) {
+    return (
+      <div className={styles.srsc}>
+        <div className={styles.titleSection}>
+          {/* Puedes poner un Spinner de Fluent UI o un mensaje discreto */}
+          <h1 className={styles.mainTitle}>Cargando aplicación...</h1>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isUserValido) {
+    return (
+      <div className={styles.srsc}>
+        <div className={styles.userSection}>
+          <span className={styles.userName}>👤 {props.userDisplayName}</span>
+        </div>
+        <div className={styles.titleSection}>
+          <h1 className={styles.mainTitle}>Acceso restringido</h1>
+          <p className={styles.mainTitle} style={{ fontSize: '18px' }}>
+            El usuario no está correctamente configurado en el sistema.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <SPFxContext.Provider value={props.context}>

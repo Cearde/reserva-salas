@@ -191,16 +191,20 @@ const BloqueoSala: React.FC<IViewProps> = (props) => {
   }
 };*/
   React.useEffect( () => {
-      
         // 1. Supongamos que ya cargaste tus usuarios en dropdownOptions.usuarios
         if (usuarios.length > 0 && !selectedUsuario) {
-        // const currentUserId = usuarioIDLista context.pageContext.legacyPageContext.usuarioIDLista;
-    
           // 3. Verificamos si el usuario actual existe en la lista del dropdown
-          const currentUserOption = usuarios.find(u => Number(u.key) === usuarioIDLista);
+          const currentUserOption = usuarios.filter(u => Number(u.key) === usuarioIDLista);
     
           if (currentUserOption) {
-            setSelectedUsuario(Number(currentUserOption.key));
+            //setSelectedUsuario(Number(currentUserOption.key));
+            if(isAdmin) {
+                setPlantas(plantas);
+                setSelectedUsuario(Number(currentUserOption[0].key));
+              }else {
+                setPlantas(currentUserOption);
+                setSelectedUsuario(Number(currentUserOption[0].key));
+              }
           }
         }
         
@@ -208,11 +212,8 @@ const BloqueoSala: React.FC<IViewProps> = (props) => {
     }, [usuarios]); 
 
     React.useEffect( () => {
-        
           // 1. Supongamos que ya cargaste tus usuarios en dropdownOptions.usuarios
           if (plantas.length > 0 && !selectedPlanta) {
-           // const currentUserId = usuarioIDLista context.pageContext.legacyPageContext.usuarioIDLista;
-      
             // 3. Verificamos si el usuario actual existe en la lista del dropdown
             const currentUserOption = plantas.filter(u => Number(u.key) === usuarioIDDivision);
       
@@ -242,6 +243,7 @@ const BloqueoSala: React.FC<IViewProps> = (props) => {
         <Spinner size={SpinnerSize.large} label={strings.LoadingConfig} />
       ) : (
         <div className={styles.viewContent}>
+          <span className={styles.camposObligatoriosTitle}>{strings.camposObligatoriosTitle}</span>
           {message && (
             <MessageBar
               messageBarType={messageType}

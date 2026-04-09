@@ -471,7 +471,7 @@ const MantenedorSalas: React.FC<IViewProps> = () => {
         <Dropdown
           placeholder={strings.SelectPisoFilterPlaceholder}
           options={pisos}
-          selectedKey={String(filterPisoId ?? 'all')}
+          selectedKey={filterPisoId  || null}
           onChange={handleFilterPisoChange}
           style={{ width: 200 }}
         />

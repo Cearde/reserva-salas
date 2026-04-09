@@ -11,6 +11,7 @@ declare interface ISrscWebPartStrings {
   AppOfficeEnvironment: string;
   AppOutlookEnvironment: string;
   UnknownEnvironment: string;
+  camposObligatoriosTitle: string;
 
   // Srsc.tsx
   ReservaSalaView: string;
@@ -18,6 +19,7 @@ declare interface ISrscWebPartStrings {
   BloqueoSalaView: string;
   GenerarQRView: string;
   ReportesView: string;
+  MisReservasView: string;
 
   // ReservaSala.tsx
   ReservaSalaTitle: string;
@@ -90,6 +92,13 @@ declare interface ISrscWebPartStrings {
   ConfirmReservationButton: string;
   CloseButton: string;
 
+//MisReservas.tsx
+
+  MisReservasTitle: string;
+  ReservaEliminadaSuccess: string;
+  ReservaEliminadaError: string;
+  DeleteReservationButton: string;
+
   // Reportes.tsx
   ReportesTitle: string;
   AllPlaceholder: string;
@@ -109,6 +118,7 @@ declare interface ISrscWebPartStrings {
   FechaCheckOutColumn: string;
   KPIColumn: string;
   VerColumn: string;
+  EliminarColumn: string;
   ViewDetailsButton: string;
 
   // Mantenedores
@@ -224,6 +234,7 @@ declare interface ISrscWebPartStrings {
   GerenciaVicepresidenciaLabel: string;
   SelectDivisionPlaceholder: string;
   UsuarioROLLabel: string;
+  SelectDivisionFilterPlaceholder: string;
 
   // Mantenedor Divisiones
   MantenedorDivisionesView: string;

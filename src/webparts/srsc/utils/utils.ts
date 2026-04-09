@@ -48,5 +48,5 @@ export const onFormatDate = (date?: Date): string => {
     const year = date.getFullYear();
     return `${day}-${month}-${year}`;
   };
-export const APP_VERSION = "2.5.0.0"; // Aquí pones la versión de tu package-solution
+export const APP_VERSION = "2.6.0.0"; // Aquí pones la versión de tu package-solution
 

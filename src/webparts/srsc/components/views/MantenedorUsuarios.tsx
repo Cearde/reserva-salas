@@ -18,6 +18,7 @@ import {
   SelectionMode,
   IColumn,
   IconButton,
+  IDropdownOption,
   TooltipHost,
   Dropdown
  // IDropdownOption
@@ -37,7 +38,7 @@ const MantenedorUsuarios: React.FC<IViewProps> = () => {
   const [divisiones, setdivisiones] = useState<IDivisionItem[]>([]);
   const [allGerencias, setAllGerencias] = useState<IGerenciaItem[]>([]);
   //const [filteredGerencias, setFilteredGerencias] = useState<IDropdownOption[]>([]);
-  
+  const [divisionesFiltroId, setDivisionesFiltroId] : [number | undefined, React.Dispatch<React.SetStateAction<number | undefined>>] = React.useState<number | undefined>(undefined);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [currentUser, setCurrentUser] = useState<IUsuarioItem | undefined>(undefined);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -57,16 +58,18 @@ const MantenedorUsuarios: React.FC<IViewProps> = () => {
     setIsLoading(true);
     setErrorTitle(undefined);
     try {
-      const [fetchedUsuarios, /*fetchedVicepresidencias,*/fetchdivisiones, fetchedGerencias] = await Promise.all([
-        spService.getUsuarios(true), // Fetch all users, including inactive
+      const [fetchedUsuarios, fetchdivisiones, fetchedGerencias] = await Promise.all([
+        spService.getUsuarios(true, divisionesFiltroId), // Fetch all users, including inactive
         //spService.getVicepresidencias(false), // Fetch only active vicepresidencias for dropdown
         spService.getDivisiones(false), // Fetch only active divisiones for dropdown
-        spService.getGerencias(false) // Fetch only active gerencias for dropdown
+        spService.getGerencias(false), // Fetch only active gerencias for dropdown
+        //spService.fetchActiveListItems('LM_PLANTAS') // Fetch only active divisiones for filtro
       ]);
       setUsuarios(fetchedUsuarios);
       //setVicepresidencias(fetchedVicepresidencias.map(vp => ({ key: vp.Id!, text: vp.Title })));
       setdivisiones(fetchdivisiones);//.map(vp => ({ key: vp.Id!, text: vp.Title })));
       setAllGerencias(fetchedGerencias);
+     //setDivisionesFiltro(fetchDivisionesFiltro);//.map(d => ({ key: d.Id!, text: d.Title })));
     } catch (err) {
       //setError(strings.ErrorFetchingData);
       setMessage({ type: MessageBarType.error, text: strings.ErrorFetchingData });
@@ -74,24 +77,12 @@ const MantenedorUsuarios: React.FC<IViewProps> = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [spService]);
+  }, [spService, divisionesFiltroId]);
 
   useEffect(() => {
     void fetchUsuario();
   }, [fetchUsuario]);
 
-  // Effect for cascading dropdown
-  /*useEffect(() => {
-    if (currentUser?.VicepresidenciaId && allGerencias.length > 0) {
-      const filtered = allGerencias
-        .filter(g => g.VicepresidenciaId === currentUser.VicepresidenciaId)
-        .map(g => ({ key: g.Id!, text: g.Title }));
-      setFilteredGerencias(filtered);
-    } else {
-      setFilteredGerencias([]);
-    }
-  }, [currentUser?.VicepresidenciaId, allGerencias]);
-*/
 
   const validateForm = (): boolean => {
     let isValid = true;
@@ -154,26 +145,7 @@ const MantenedorUsuarios: React.FC<IViewProps> = () => {
     setDivisionError(undefined);
     setGerenciaError(undefined);
   };
-/*
-  const onDeleteUser = async (id: number, title: string): Promise<void> => {
-    if (window.confirm(strings.ConfirmDeleteUser.replace('{0}', title))) {
-      setIsLoading(true);
-      setError(undefined);
-      setMessage(undefined);
-      try {
-        await spService.softDeleteUsuario(id);
-        setMessage(strings.UserDeletedSuccess);
-        setMessageType(MessageBarType.success);
-        await fetchData();
-      } catch (err) {
-        setError(strings.ErrorDeletingUser);
-        setMessageType(MessageBarType.error);
-        console.error(err);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-  };*/
+
 
    const handleDelete = (item: IUsuarioItem) => {
       setUsuarioToDelete(item);
@@ -306,6 +278,20 @@ const MantenedorUsuarios: React.FC<IViewProps> = () => {
     setGerenciaError(undefined);
   };
 
+  const handleFilterDivisionChange = (event: React.FormEvent<HTMLDivElement>, option?: IDropdownOption): void => {
+      if (option && option.key !== 'all') {
+        const keyAsNumber = Number(option.key);
+        if (!isNaN(keyAsNumber)) {
+          (setDivisionesFiltroId as any)(keyAsNumber); // Cast to any
+        } else {
+          (setDivisionesFiltroId as any)(undefined); // Cast to any
+        }
+      } else {
+        (setDivisionesFiltroId as any)(undefined); // Cast to any
+      }
+    };
+  
+
   const columns: IColumn[] = [
    // { key: 'idColumn', name: 'ID', fieldName: 'Id', minWidth: 20,  isResizable: true },
     { key: 'userColumn', name: strings.UserLabel, fieldName: 'text', minWidth: 150, isResizable: true },
@@ -346,6 +332,13 @@ const MantenedorUsuarios: React.FC<IViewProps> = () => {
 
       <Stack horizontal horizontalAlign="space-between" verticalAlign="center" style={{ marginBottom: 10 }}>
         <PrimaryButton text={strings.AddUserButton} onClick={onAddUser} iconProps={{ iconName: 'Add' }} />
+          <Dropdown
+            placeholder={strings.SelectDivisionFilterPlaceholder}
+            options={divisiones.map(d => ({ key: d.Id!, text: d.Title }))}
+            selectedKey={divisionesFiltroId || null}
+            onChange={handleFilterDivisionChange}
+            style={{ width: 200 }}
+          />
       </Stack>
 
       {isLoading ? (
@@ -385,19 +378,6 @@ const MantenedorUsuarios: React.FC<IViewProps> = () => {
             defaultSelectedUsers={currentUser?.email ? [currentUser.email] : []}
             errorMessage={userError}
           />
-          {/* Dropdowns de Vicepresidencia y Gerencia con validación 
-          <Dropdown
-            label={strings.GerenciaVicepresidenciaLabel}
-            required
-            options={vicepresidencias}
-            selectedKey={currentUser?.VicepresidenciaId || null}
-            onChange={(e, option) => {
-                setCurrentUser((prev: IUsuarioItem | undefined) => ({ ...prev, VicepresidenciaId: option?.key as number, GerenciaId: 0 } as IUsuarioItem));
-                setVicepresidenciaError(undefined);
-            }}
-            placeholder={strings.SelectVicepresidenciaPlaceholder}
-            errorMessage={vicepresidenciaError}
-          />*/}
           <Dropdown
             label={strings.PisoPlantaLabel}
             required

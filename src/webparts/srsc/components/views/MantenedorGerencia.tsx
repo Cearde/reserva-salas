@@ -353,23 +353,23 @@ const MantenedorGerencia: React.FC<IViewProps> = () => {
         </DialogFooter>
       </Dialog>
 
-    <Dialog
-        hidden={!showDeleteConfirm}
-        onDismiss={() => setShowDeleteConfirm(false)}
-        dialogContentProps={{
-            type: DialogType.normal,
-            title: strings.ConfirmDeleteGerencia.replace('{0}', gerenciaToDelete?.Title || ''),
-        }}
-        modalProps={{
-            isBlocking: true,
-            styles: { main: { maxWidth: 450 } }
-        }}
-    >
-        <DialogFooter>
-            <PrimaryButton onClick={confirmDelete} text={strings.DeleteGerenciaButton} />
-            <DefaultButton onClick={onCancel} text={strings.CancelButton} />
-        </DialogFooter>
-    </Dialog>
+        <Dialog
+            hidden={!showDeleteConfirm}
+            onDismiss={() => setShowDeleteConfirm(false)}
+            dialogContentProps={{
+                type: DialogType.normal,
+                title: strings.ConfirmDeleteGerencia.replace('{0}', gerenciaToDelete?.Title || ''),
+            }}
+            modalProps={{
+                isBlocking: true,
+                styles: { main: { maxWidth: 450 } }
+            }}
+        >
+            <DialogFooter>
+                <PrimaryButton onClick={confirmDelete} text={strings.DeleteGerenciaButton} />
+                <DefaultButton onClick={onCancel} text={strings.CancelButton} />
+            </DialogFooter>
+        </Dialog>
     </div>
   );
 };

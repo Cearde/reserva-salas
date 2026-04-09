@@ -108,6 +108,8 @@ export interface IReportItem {
   Id: number;
   Planta: string; // This will be derived from Piso.Title
   Piso: string;
+  IMAGEN: string; // Added for the image URL
+  COORDENADA: string; // Added for room coordinates
   Sala: string;
   Usuario: string;
   FechaReserva: string; // FECHAINICIORESERVA
@@ -124,12 +126,12 @@ export interface IReservationReportItem {
   Id: number;
   FECHAINICIORESERVA: string;
   FECHATERMINORESERVA: string;
-  PISO: { Title: string; ID: number; }; // Added ID
+  PISO: { Title: string; ID: number; IMAGEN: string; }; // Added ID and IMAGEN
   ESTADO: string;
   HORARESERVADA: string;
   FECHASALIDA: string;
   FECHAENTRADA: string;
-  PUESTO: { Title: string; ID: number; }; // Added ID
+  PUESTO: { Title: string; ID: number; COORDENADA: string; }; // Added ID and COORDENADA
   USUARIO: { Title: string; ID: number; }; // Added ID
 }
 

@@ -104,6 +104,8 @@ const Reportes: React.FC<IViewProps> = () => {
                     Id: item.Id,
                     Planta: plantaName,
                     Piso: item.PISO?.Title || strings.NAStatus,
+                    IMAGEN: item.PISO?.IMAGEN || '',
+                    COORDENADA: item.PUESTO?.COORDENADA || '',
                     Sala: item.PUESTO?.Title || strings.NAStatus,
                     Usuario: item.USUARIO?.Title || strings.NAStatus,
                     FechaReserva: item.FECHAINICIORESERVA ? new Date(item.FECHAINICIORESERVA).toLocaleDateString() : strings.NAStatus,
@@ -168,6 +170,7 @@ const Reportes: React.FC<IViewProps> = () => {
         <div>
             <h2>{strings.ReportesTitle}</h2>
             <div className={styles.viewContent}>
+                <span className={styles.camposObligatoriosTitle}>{strings.camposObligatoriosTitle}</span>
                 <Stack horizontal wrap tokens={{ childrenGap: 15 }} style={{ marginBottom: '20px' }}>
                     <div className={`${styles.formGroup} ${styles.formControl}`}>
                         <Dropdown

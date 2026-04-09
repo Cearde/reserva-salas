@@ -79,7 +79,7 @@ gulp bundle --ship
 gulp package-solution --ship                 
 
 
-subir a guit
+subir a git
 git add .
 git commit -m "Agregado botón de QR y leyenda de colores en el plano"
 git push

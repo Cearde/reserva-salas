@@ -12,6 +12,7 @@ define([], function() {
     "AppOfficeEnvironment": "La aplicación se está ejecutando en office.com",
     "AppOutlookEnvironment": "La aplicación se está ejecutando en Outlook",
     "UnknownEnvironment": "La aplicación se está ejecutando en un entorno desconocido",
+    "camposObligatoriosTitle": "Debe ingresar todos los campos marcados con (*)",
 
     // Srsc.tsx
     "ReservaSalaView": "Reserva Sala",
@@ -19,6 +20,7 @@ define([], function() {
     "BloqueoSalaView": "Bloqueo Sala",
     "GenerarQRView": "Generar QR",
     "ReportesView": "Reportes",
+    "MisReservasView": "Mis Reservas",
 
     // ReservaSala.tsx
     "ReservaSalaTitle": "Reserva de Sala",
@@ -91,8 +93,15 @@ define([], function() {
     "ConfirmReservationButton": "Confirmar Reserva",
     "CloseButton": "Cerrar",
 
-    // Reportes.tsx
+    //MisReservas.tsx
+    "MisReservasTitle": "Mis Reservas",
+    "ReservaEliminadaSuccess": "Reserva eliminada con éxito.",
+    "ReservaEliminadaError": "Error al eliminar la reserva.",
+    "DeleteReservationButton": "Eliminar Reserva",
+
+    // Reportes.tsx 
     "ReportesTitle": "Reporte de Reservas y Bloqueos",
+    
     "AllPlaceholder": "Todas",
     "FechaDesdeLabel": "Fecha Desde",
     "FechaHastaLabel": "Fecha Hasta",
@@ -110,6 +119,7 @@ define([], function() {
     "FechaCheckOutColumn": "Fecha Check-Out",
     "KPIColumn": "KPI",
     "VerColumn": "Ver",
+    "EliminarColumn": "Eliminar",
     "ViewDetailsButton": "Ver Detalles",
 
     // Mantenedores
@@ -224,6 +234,7 @@ define([], function() {
     "GerenciaVicepresidenciaLabel": "Vicepresidencia",
     "SelectDivisionPlaceholder": "Seleccione una división",
     "UsuarioROLLabel": "ROL",
+    "SelectDivisionFilterPlaceholder": "Filtrar por División",
 
     // Mantenedor Divisiones
     "MantenedorDivisionesView": "Mantenedor de Divisiones",
