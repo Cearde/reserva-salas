@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { IViewProps } from './IViewProps';
 import { SPService  } from '../../services/sp';
-import {ISPSalaItem } from '../models/entities';
+import {ISPSalaItem, ISalaItem } from '../models/entities';
 import { useSPFxContext } from '../../contexts/SPFxContext';
 import * as strings from 'SrscWebPartStrings';
 import {
@@ -35,7 +35,7 @@ const MantenedorSalas: React.FC<IViewProps> = () => {
   const spService = React.useMemo(() => new SPService(context), [context]);
   //const { data: salas, loading: salasLoading, error: salasError } = useSalasByPiso(spService, selectedPiso);
 
-  const [salas, setSalas] = React.useState<ISPSalaItem[]>([]);
+  const [salas, setSalas] = React.useState<ISalaItem[]>([]);
   const [pisos, setPisos] = React.useState<IDropdownOption[]>([]);
   const [plantas, setPlantas] = React.useState<IDropdownOption[]>([]); // New state for plantas
   const [loading, setLoading] = React.useState<boolean>(true);
@@ -44,8 +44,9 @@ const MantenedorSalas: React.FC<IViewProps> = () => {
  // const [messageType, setMessageType] = React.useState<MessageBarType>(MessageBarType.info);
 
   const [isModalOpen, setIsModalOpen] = React.useState<boolean>(false);
-  const [currentSala, setCurrentSala] = React.useState<ISPSalaItem | undefined>(undefined);
-  const [filterPisoId, setFilterPisoId]: [number | undefined, React.Dispatch<React.SetStateAction<number | undefined>>] = React.useState<number | undefined>(undefined);
+  const [currentSala, setCurrentSala] = React.useState<ISalaItem | undefined>(undefined);
+  //const [filterPisoId, setFilterPisoId]: [number | undefined, React.Dispatch<React.SetStateAction<number | undefined>>] = React.useState<number | undefined>(undefined);
+  const [filterPlantaId, setFilterPlantaId]: [number | undefined, React.Dispatch<React.SetStateAction<number | undefined>>] = React.useState<number | undefined>(undefined);
 
 
   const [showDeleteConfirm, setShowDeleteConfirm] = React.useState<boolean>(false);
@@ -75,7 +76,8 @@ const MantenedorSalas: React.FC<IViewProps> = () => {
     setLoading(true);
     setError(undefined);
     try {
-      const fetchedSalas = await spService.getSalas(filterPisoId, true); // Fetch all (active/inactive) for mantenedor
+      const fetchedSalas = await spService.getSalas(filterPlantaId, true); // Fetch all (active/inactive) for mantenedor
+      
       setSalas(fetchedSalas);
     } catch (err) {
       console.error("Error fetching salas:", err);
@@ -83,7 +85,7 @@ const MantenedorSalas: React.FC<IViewProps> = () => {
     } finally {
       setLoading(false);
     }
-  }, [spService, filterPisoId]);
+  }, [spService, filterPlantaId]);
 
   const fetchPisos = React.useCallback(async () => {
     try {
@@ -180,10 +182,11 @@ const MantenedorSalas: React.FC<IViewProps> = () => {
     setCurrentSala({
       Title: '',
       COORDENADA: '', // Start with empty coordinates
+      PLANTAId: undefined,
       PISOId: undefined,
       CAPACIDAD: 0,
       activo: true,
-    } as ISPSalaItem);
+    } as ISalaItem);
     setSelectedPlantaInModal(undefined);
     setSelectedPisoInModal(undefined);
     setFloorImageUrl(undefined);
@@ -197,9 +200,9 @@ const MantenedorSalas: React.FC<IViewProps> = () => {
     setSalaCapacityError(undefined);
   };
 
-  const handleEditClick = (sala: ISPSalaItem): void => {
+  const handleEditClick = (sala: ISalaItem): void => {
     setCurrentSala({ ...sala }); // Create a copy to edit
-    setSelectedPlantaInModal(pisos.find(p => Number(p.key) === sala.PISOId)?.data?.plantaId);
+    setSelectedPlantaInModal(sala?.PLANTAId);//pisos.find(p => Number(p.key) === sala.PISOId)?.data?.plantaId);
     setSelectedPisoInModal(sala.PISOId);
     // floorImageUrl will be set by the useEffect when selectedPisoInModal changes
     setImageDimensions(undefined);
@@ -212,7 +215,7 @@ const MantenedorSalas: React.FC<IViewProps> = () => {
     setSalaCapacityError(undefined);
   };
 
-  const handleVerQRClick = async (sala: ISPSalaItem): Promise<void> => {
+  const handleVerQRClick = async (sala: ISalaItem): Promise<void> => {
     // Construye la URL. Ajusta 'QRSalas' al nombre real de tu biblioteca
     // y la extensión (.png, .jpg) según corresponda.
     //const siteUrl = context.pageContext.web.absoluteUrl;
@@ -272,24 +275,7 @@ const MantenedorSalas: React.FC<IViewProps> = () => {
       ventanaImpresion.document.close();
     }
   };
-  /*
-  const handleDeleteClick = async (salaId: number, salaName: string): Promise<void> => {
-    if (window.confirm(strings.ConfirmDeleteSala.replace('{0}', salaName))) {
-      setLoading(true);
-      try {
-        await spService.deleteSala(salaId);
-        setMessage(strings.SalaDeletedSuccess);
-        setMessageType(MessageBarType.success);
-        void fetchSalas();
-      } catch (err) {
-        console.error("Error deleting sala:", err);
-        setError(strings.ErrorDeletingSala);
-        setMessageType(MessageBarType.error);
-      } finally {
-        setLoading(false);
-      }
-    }
-  };*/
+
 
   const handleDelete = (item: ISPSalaItem) => {
           setSalaToDelete(item);
@@ -368,7 +354,7 @@ const MantenedorSalas: React.FC<IViewProps> = () => {
     setSalaCapacityError(undefined);
   };
 
-  const validarCoordenadas = (salasExistentes: ISPSalaItem[]): boolean => {
+  const validarCoordenadas = (salasExistentes: ISalaItem[]): boolean => {
     if (!currentSala?.COORDENADA) return false;
 
     const [currentX, currentY] = currentSala.COORDENADA.split(',').map(num => parseInt(num, 10));
@@ -400,23 +386,23 @@ const MantenedorSalas: React.FC<IViewProps> = () => {
 
   const columns: IColumn[] = [
     { key: 'name', name: strings.SalaNameLabel, fieldName: 'Title', minWidth: 250, maxWidth: 260, isResizable: true }, 
-    { key: 'division', name: strings.DivisionLabel, fieldName: 'PISOId', minWidth: 150, maxWidth: 160, isResizable: true, isMultiline:true,
-      onRender: (item: ISPSalaItem) => {
+    { key: 'division', name: strings.DivisionLabel, fieldName: 'PLANTATitle', minWidth: 150, maxWidth: 160, isResizable: true, isMultiline:true,
+      /*onRender: (item: ISalaItem) => {
         if (item.PISOId === undefined) return 'N/A'; // Handle undefined PISOId
         const piso = pisos.find(p => p.key === item.PISOId);
         const divisionId = piso ? piso.data?.plantaId : item.PISOId;
         return plantas.find(planta => planta.key === divisionId)?.text || divisionId;
 
         //return piso ? piso.data?.plantaId : item.PISOId;
-      }
+      }*/
     },
       //setSelectedPlantaInModal(pisos.find(p => Number(p.key) === sala.PISOId)?.data?.plantaId);
-    { key: 'piso', name: strings.SalaPisoLabel, fieldName: 'PISOId', minWidth: 150, maxWidth: 160, isResizable: true, isMultiline:true,
-      onRender: (item: ISPSalaItem) => {
+    { key: 'piso', name: strings.SalaPisoLabel, fieldName: 'PISOTitle', minWidth: 150, maxWidth: 160, isResizable: true, isMultiline:true,
+     /* onRender: (item: ISalaItem) => {
         if (item.PISOId === undefined) return 'N/A'; // Handle undefined PISOId
         const piso = pisos.find(p => p.key === item.PISOId);
         return piso ? piso.text : item.PISOId;
-      }
+      }*/
     },
     { key: 'capacity', name: strings.SalaCupoLabel, fieldName: 'CAPACIDAD', minWidth: 50, isResizable: true },
    // { key: 'coordinates', name: strings.SalaCoordinatesLabel, fieldName: 'COORDENADA', minWidth: 100, isResizable: true },
@@ -425,7 +411,7 @@ const MantenedorSalas: React.FC<IViewProps> = () => {
     },
     {
       key: 'actions', name: strings.AccionesColumn, minWidth: 150, isResizable: true,
-      onRender: (item: ISPSalaItem) => (
+      onRender: (item: ISalaItem) => (
         <Stack horizontal tokens={{ childrenGap: 5 }} wrap>
           <TooltipHost content={strings.VerQR}>
             <IconButton iconProps={{ iconName: 'QRCode' }} onClick={() => handleVerQRClick(item)} />
@@ -443,16 +429,16 @@ const MantenedorSalas: React.FC<IViewProps> = () => {
     }
   ];
 
-  const handleFilterPisoChange = (event: React.FormEvent<HTMLDivElement>, option?: IDropdownOption): void => {
+  const handleFilterPlantaChange = (event: React.FormEvent<HTMLDivElement>, option?: IDropdownOption): void => {
     if (option && option.key !== 'all') {
       const keyAsNumber = Number(option.key);
       if (!isNaN(keyAsNumber)) {
-        (setFilterPisoId as any)(keyAsNumber); // Cast to any
+        (setFilterPlantaId as any)(keyAsNumber); // Cast to any
       } else {
-        (setFilterPisoId as any)(undefined); // Cast to any
+        (setFilterPlantaId as any)(undefined); // Cast to any
       }
     } else {
-      (setFilterPisoId as any)(undefined); // Cast to any
+      (setFilterPlantaId as any)(undefined); // Cast to any
     }
   };
 
@@ -470,11 +456,12 @@ const MantenedorSalas: React.FC<IViewProps> = () => {
         </PrimaryButton>
         <Dropdown
           placeholder={strings.SelectPisoFilterPlaceholder}
-          options={pisos}
-          selectedKey={filterPisoId  || null}
-          onChange={handleFilterPisoChange}
+          options={[{ key: 'all', text: strings.AllPlaceholder }, ...plantas.map(planta => ({ key: planta.key, text: planta.text }))]} // Dropdown solo para plantas
+          selectedKey={filterPlantaId  || null}
+          onChange={handleFilterPlantaChange}
           style={{ width: 200 }}
         />
+       
       </Stack>
 
       {!loading && !error && salas.length === 0 && (
@@ -535,7 +522,8 @@ const MantenedorSalas: React.FC<IViewProps> = () => {
               onChange={(e, option) => {
                 setSelectedPlantaInModal(option ? Number(option.key) : undefined);
                 setSelectedPisoInModal(undefined); // Reset piso when planta changes
-                setCurrentSala(prev => ({ ...prev, PISOId: undefined } as ISPSalaItem)); // Reset PISOId in currentSala
+                setCurrentSala(prev => ({ ...prev,PLANTAId:option ? Number(option.key) : undefined,
+                                                  PISOId: undefined } as ISalaItem)); // Reset PISOId in currentSala
               }}
               required
             />

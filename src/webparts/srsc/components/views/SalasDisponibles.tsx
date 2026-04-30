@@ -85,7 +85,7 @@ const SalasDisponibles: React.FC<IViewProps> = (props) => {
         if (currentUserOption) {
           //setSelectedUsuario(Number(currentUserOption.key));
           if(isAdmin) {
-            setUsuarios(plantas);
+            setUsuarios(usuarios);
             setSelectedUsuario(Number(currentUserOption[0].key));
           }else {
             setUsuarios(currentUserOption);

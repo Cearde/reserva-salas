@@ -225,7 +225,7 @@ React.useEffect(() => {
   const generateQrCode = async (pisoId: string, salaId: string): Promise<string> => {
     //const url = `${baseUrl}?piso=${encodeURIComponent(pisoId)}&sala=${encodeURIComponent(salaId)}`;
     const url = JSON.stringify({
-                'piso':pisoId,
+                'Piso':pisoId,
                 'Sala':salaId
                 });
     return qrcode.toDataURL(url);
@@ -290,7 +290,7 @@ React.useEffect(() => {
         return;
       }
 
-      const allSalasForPiso = await spService?.getSalas(selectedPisoId as number, true);
+      const allSalasForPiso = await spService?.getSalasByPiso(selectedPisoId as number);
       if (!allSalasForPiso || allSalasForPiso.length === 0) {
         setMessage(strings.GenerarQRNoRoomsFound);
         setLoading(false);
@@ -298,7 +298,7 @@ React.useEffect(() => {
       }
 
       for (const sala of allSalasForPiso) {
-        const fileBase64 = await generateQrCode(selectedPiso, sala.Title);
+        const fileBase64 = await generateQrCode(selectedPisoId.toString(), sala.Id!.toString());
         generatedQRs.push({ plantaId: selectedPlantaId.toString(),
                             salaId: sala.Id!.toString(), 
                             salaName: sala.Title,

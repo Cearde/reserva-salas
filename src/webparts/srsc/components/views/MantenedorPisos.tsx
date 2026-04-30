@@ -50,12 +50,13 @@ const MantenedorPisos: React.FC<IViewProps> = () => {
   const [selectedHoras, setSelectedHoras] = useState<number[]>([]); // New state for selected hours
   const [selectAllHoras, setSelectAllHoras] = useState<boolean>(false); // State for "Marcar todos" checkbox
   const [formErrors, setFormErrors] = React.useState<{ Title?: string, Planta?: string, Imagen?: string, Horarios?: string }>({});
+  const [filterPlantaId, setFilterPlantaId]: [number | undefined, React.Dispatch<React.SetStateAction<number | undefined>>] = React.useState<number | undefined>(undefined);
 
   const fetchPisosAndPlantas = useCallback(async () => {
     setIsLoading(true);
     //setError(undefined);
     try {
-      const fetchedPisos = await spService.getPisos(true); // Fetch all pisos, including inactive
+      const fetchedPisos = await spService.getPisos(true,filterPlantaId? filterPlantaId : undefined); // Fetch all pisos, including inactive
       setPisos(fetchedPisos);
 
       const fetchedPlantas = await spService.fetchActiveListItems('LM_PLANTAS');
@@ -68,7 +69,7 @@ const MantenedorPisos: React.FC<IViewProps> = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [spService]);
+  }, [spService, filterPlantaId]);
 
   const fetchPlanificacionHoras = useCallback(async () => {
     try {
@@ -132,21 +133,6 @@ const MantenedorPisos: React.FC<IViewProps> = () => {
     setIsModalOpen(true);
   };
 
-  /*const onDeletePiso = async (id: number): Promise<void> => {
-    if (window.confirm('¿Está seguro que desea eliminar este piso?')) {
-      setIsLoading(true);
-      setError(undefined);
-      try {
-        await spService.deletePiso(id);
-        await fetchPisosAndPlantas();
-      } catch (err) {
-        setError(`Error al eliminar piso: ${err.message}`);
-        console.error(err);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-  };*/
 
    const onCancel = (): void => {
     setIsModalOpen(false);
@@ -270,6 +256,21 @@ const MantenedorPisos: React.FC<IViewProps> = () => {
           setShowDeleteConfirm(true);
       };
 
+
+  const handleFilterPlantaChange = (event: React.FormEvent<HTMLDivElement>, option?: IDropdownOption): void => {
+      if (option && option.key !== 'all') {
+        const keyAsNumber = Number(option.key);
+        if (!isNaN(keyAsNumber)) {
+          (setFilterPlantaId as any)(keyAsNumber); // Cast to any
+        } else {
+          (setFilterPlantaId as any)(undefined); // Cast to any
+        }
+      } else {
+        (setFilterPlantaId as any)(undefined); // Cast to any
+      }
+    };
+
+
   const columns: IColumn[] = [
     /*{
       key: 'idColumn',
@@ -356,7 +357,19 @@ const MantenedorPisos: React.FC<IViewProps> = () => {
 
       <Stack horizontal horizontalAlign="space-between" verticalAlign="center" style={{ marginBottom: 10 }}>
         <PrimaryButton text="Agregar Piso" onClick={onAddPiso} />
+
+        <Dropdown
+          placeholder={strings.SelectPlantaFilterPlaceholder}
+          options={[{ key: 'all', text: strings.AllPlaceholder }, ...plantas]} // Dropdown solo para plantas
+          selectedKey={filterPlantaId  || null}
+          onChange={handleFilterPlantaChange}
+          style={{ width: 200 }}
+        />
+
+
       </Stack>
+
+       
 
       {isLoading ? (
         <Spinner size={SpinnerSize.large} label="Cargando pisos..." />

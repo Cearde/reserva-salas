@@ -141,6 +141,7 @@ declare interface ISrscWebPartStrings {
   SalaCoordinatesLabel: string;
   SalaActiveLabel: string;
   SelectPisoFilterPlaceholder: string;
+  SelectPlantaFilterPlaceholder: string;
   CannotDeleteSalaWithoutId: string;
   NoSalasFound: string;
   ConfirmDeleteSala: string;

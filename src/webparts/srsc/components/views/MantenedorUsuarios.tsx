@@ -334,7 +334,7 @@ const MantenedorUsuarios: React.FC<IViewProps> = () => {
         <PrimaryButton text={strings.AddUserButton} onClick={onAddUser} iconProps={{ iconName: 'Add' }} />
           <Dropdown
             placeholder={strings.SelectDivisionFilterPlaceholder}
-            options={divisiones.map(d => ({ key: d.Id!, text: d.Title }))}
+            options={[{ key: 'all', text: strings.AllPlaceholder }, ...divisiones.map(d => ({ key: d.Id!, text: d.Title }))]}
             selectedKey={divisionesFiltroId || null}
             onChange={handleFilterDivisionChange}
             style={{ width: 200 }}

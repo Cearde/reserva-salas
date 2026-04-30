@@ -141,6 +141,7 @@ define([], function() {
     "SalaCoordinatesLabel": "Coordenadas (X,Y)",
     "SalaActiveLabel": "Activa",
     "SelectPisoFilterPlaceholder": "Filtrar por Piso",
+    "SelectPlantaFilterPlaceholder": "Filtrar por División",
     "NoSalasFound": "No se encontraron salas.",
     "ConfirmDeleteSala": "¿Está seguro que desea eliminar la sala {0}?",
     "SalaAddedSuccess": "Sala agregada con éxito.",

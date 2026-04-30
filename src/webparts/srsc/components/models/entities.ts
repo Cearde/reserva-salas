@@ -140,10 +140,33 @@ export interface ISPSalaItem {
   Id?: number; // Optional for creation
   Title: string; // Room Name
   COORDENADA: string; // X,Y coordinates
-  PISOId?: number; // Lookup to LM_PISOS (made optional)
+  PLANTA?: {
+    Id: number;
+    Title: string; // Added Title
+  };
+  PISO?: {
+    Id: number;
+    Title: string; // Added Title
+  };
   CAPACIDAD?: number; // Capacity of the room
   activo: boolean; // Active status
 }
+
+
+export interface ISalaItem {
+  Id?: number; // Optional for creation
+  Title: string; // Room Name
+  COORDENADA: string; // X,Y coordinates
+  PLANTAId?: number; // Lookup to LM_PLANTAS
+  PLANTATitle?: string; // Display title for PLANTA
+  PISOId?: number; // Lookup to LM_PISOS (made optional)
+  PISOTitle?: string; // Display title for PISO
+  CAPACIDAD?: number; // Capacity of the room
+  activo: boolean; // Active status
+  
+}
+
+
 
 // New interface for LM_VICEPRESIDENCIAS
 export interface IVicepresidenciaItem {

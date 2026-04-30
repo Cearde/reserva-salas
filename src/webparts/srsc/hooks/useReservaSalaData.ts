@@ -64,7 +64,7 @@ export function useSalasByPiso(spService: SPService, selectedPiso?: number, fech
     let isMounted = true;
     if (selectedPiso && fecha && plantaId) {
       setState(prev => ({ ...prev, loading: true, error: undefined }));
-      spService.getSalasByPiso(selectedPiso, fecha, plantaId)
+      spService.getSalasByPisoPlanta(selectedPiso, fecha, plantaId)
         .then(salasData => {
           if (isMounted) {
             setState(prev => ({ ...prev, data: salasData, loading: false }));

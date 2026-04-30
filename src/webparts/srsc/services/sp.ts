@@ -13,7 +13,8 @@ import { ISPItem, ISPListItem, ISPPisoItem,IPisoItem,IReservationSPItem,
          IUsuarioItem,
          ISPUsuarioItem,
          IUploadResult,
-        IHorarioSala,ISala } from '../components/models/entities';
+        IHorarioSala,ISala, 
+        ISalaItem} from '../components/models/entities';
 
 
 export class SPService {
@@ -141,12 +142,14 @@ export class SPService {
     }
   }
 
+  
+
   /**
    * Fetches room data for a given floor and maps it to the ISala interface.
    * @param pisoId The ID of the floor.
    * @returns A promise that resolves to an array of ISala objects.
    */
-  public async getSalasByPiso(pisoId: number, fecha: Date, plantaId: number): Promise<ISala[]> {
+  public async getSalasByPisoPlanta(pisoId: number, fecha: Date, plantaId: number): Promise<ISala[]> {
     try {
       const hotspots: IHotspot[] = await this.getHotspotsForFloor(pisoId);
       
@@ -566,7 +569,7 @@ public async addUserInGroup(groupName: string, userEmail: string): Promise<any> 
 
     try {
       const [salas, horarioItems] = await Promise.all([
-        this.getSalasByPiso(pisoId, date,plantaId),
+        this.getSalasByPisoPlanta(pisoId, date,plantaId),
         this.getHorarios(pisoId, plantaId, dayOfWeek)
       ]);
 
@@ -776,36 +779,89 @@ public async addUserInGroup(groupName: string, userEmail: string): Promise<any> 
       throw error;
     }
   }
+  public async getSalasByPiso(pisoId: number): Promise<ISalaItem[]> {
 
-  public async getSalas(pisoId?: number, includeInactive: boolean = false): Promise<ISPSalaItem[]> {
     const listName = 'LM_PUESTOSPISO';
-    let filter = `TIPO eq 'SalaReunion'`;
+    let filter = `TIPO eq 'SalaReunion' and activo eq 1`;
     if (pisoId) {
       filter += ` and PISOId eq ${pisoId}`;
     }
-    if (!includeInactive) {
-      filter += ` and activo eq 1`;
-    }
 
-    const apiUrl = `${this.context.pageContext.web.absoluteUrl}/_api/web/lists/getbytitle('${listName}')/items?$select=Id,Title,COORDENADA,PISOId,CAPACIDAD,activo&$filter=${filter}`;
+    const apiUrl = `${this.context.pageContext.web.absoluteUrl}/_api/web/lists/getbytitle('${listName}')/items?$select=Id,Title,COORDENADA,PISO/Id,PISO/Title,CAPACIDAD,activo,PLANTA/Title,PLANTA/Id&$filter=${filter}&$expand=PLANTA,PISO`;
 
     try {
       const response: SPHttpClientResponse = await this.context.spHttpClient.get(apiUrl, SPHttpClient.configurations.v1);
       if (response.ok) {
         const data = await response.json();
-        return data.value as ISPSalaItem[];
-      } else {
-        const errorData = await response.json();
-        console.error(`Error fetching salas:`, errorData);
-        throw new Error(`Could not fetch salas`);
+        if (data.value) {
+          return data.value.map((item: ISPSalaItem) => ({
+            Id: item.Id,
+            Title: item.Title,
+            activo: item.activo,
+            PISOId: item.PISO?.Id,
+            PISOTitle: item.PISO?.Title,
+            PLANTAId: item.PLANTA?.Id,
+            PLANTATitle: item.PLANTA?.Title,
+            CAPACIDAD: item.CAPACIDAD,
+            COORDENADA: item.COORDENADA
+          })); 
+        } else {
+          const errorData = await response.json();
+          console.error(`Error fetching salas:`, errorData);
+          throw new Error(`Could not fetch salas`);
+          // Return empty array on error
+        }
       }
+      return []; 
     } catch (error) {
       console.error(`Exception while fetching salas:`, error);
       throw error;
     }
   }
 
-  public async createSala(sala: ISPSalaItem): Promise<ISPSalaItem> {
+  public async getSalas( filterPlantaId?: number, includeInactive: boolean = false): Promise<ISalaItem[]> {
+    const listName = 'LM_PUESTOSPISO';
+    let filter = `TIPO eq 'SalaReunion'`;
+    if (filterPlantaId) {
+      filter += ` and PLANTAId eq ${filterPlantaId}`;
+    }
+    if (!includeInactive) {
+      filter += ` and activo eq 1`;
+    }
+
+    const apiUrl = `${this.context.pageContext.web.absoluteUrl}/_api/web/lists/getbytitle('${listName}')/items?$select=Id,Title,COORDENADA,PISO/Id,PISO/Title,CAPACIDAD,activo,PLANTA/Title,PLANTA/Id&$filter=${filter}&$expand=PLANTA,PISO`;
+
+    try {
+      const response: SPHttpClientResponse = await this.context.spHttpClient.get(apiUrl, SPHttpClient.configurations.v1);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.value) {
+          return data.value.map((item: ISPSalaItem) => ({
+            Id: item.Id,
+            Title: item.Title,
+            activo: item.activo,
+            PISOId: item.PISO?.Id,
+            PISOTitle: item.PISO?.Title,
+            PLANTAId: item.PLANTA?.Id,
+            PLANTATitle: item.PLANTA?.Title,
+            CAPACIDAD: item.CAPACIDAD,
+            COORDENADA: item.COORDENADA
+          })); 
+        } else {
+          const errorData = await response.json();
+          console.error(`Error fetching salas:`, errorData);
+          throw new Error(`Could not fetch salas`);
+          // Return empty array on error
+        }
+      }
+      return []; 
+    } catch (error) {
+      console.error(`Exception while fetching salas:`, error);
+      throw error;
+    }
+  }
+
+  public async createSala(sala: ISalaItem): Promise<ISalaItem> {
     const listName = 'LM_PUESTOSPISO';
     const apiUrl = `${this.context.pageContext.web.absoluteUrl}/_api/web/lists/getbytitle('${listName}')/items`;
 
@@ -818,6 +874,7 @@ public async addUserInGroup(groupName: string, userEmail: string): Promise<any> 
       body: JSON.stringify({
         Title: sala.Title,
         COORDENADA: sala.COORDENADA,
+        PLANTAId: sala.PLANTAId,
         PISOId: sala.PISOId,
         CAPACIDAD: sala.CAPACIDAD,
         activo: sala.activo,
@@ -843,7 +900,7 @@ public async addUserInGroup(groupName: string, userEmail: string): Promise<any> 
 
       if (response.ok) {
         const addedItem = await response.json();
-        return addedItem as ISPSalaItem;
+        return addedItem as ISalaItem;
       } else {
         const errorData = await response.json();
         console.error(`Error creating sala:`, errorData);
@@ -855,7 +912,7 @@ public async addUserInGroup(groupName: string, userEmail: string): Promise<any> 
     }
   }
 
-  public async updateSala(sala: ISPSalaItem): Promise<ISPSalaItem> {
+  public async updateSala(sala: ISalaItem): Promise<ISalaItem> {
     const listName = 'LM_PUESTOSPISO';
     const apiUrl = `${this.context.pageContext.web.absoluteUrl}/_api/web/lists/getbytitle('${listName}')/items(${sala.Id})`;
 
@@ -870,6 +927,7 @@ public async addUserInGroup(groupName: string, userEmail: string): Promise<any> 
       body: JSON.stringify({
         Title: sala.Title,
         COORDENADA: sala.COORDENADA,
+        PLANTAId: sala.PLANTAId, // Assuming you want to allow changing the associated PLANTA
         PISOId: sala.PISOId,
         CAPACIDAD: sala.CAPACIDAD,
         activo: sala.activo,
@@ -943,11 +1001,12 @@ public async addUserInGroup(groupName: string, userEmail: string): Promise<any> 
    * @param includeInactive Optional: Whether to include inactive pisos. Defaults to false.
    * @returns A promise that resolves to an array of IPisoItem.
    */
-  public async getPisos(includeInactive: boolean = false): Promise<IPisoItem[]> {
+  public async getPisos(includeInactive: boolean = false, filterPlantaId?: number): Promise<IPisoItem[]> {
     const listName = 'LM_PISOS';
-    let filter = '';
-    if (!includeInactive) {
-      filter = `&$filter=activo eq 1`;
+    let filter = '&$filter=activo eq 1';
+    
+    if (filterPlantaId) {
+      filter += ` and PLANTAId eq ${filterPlantaId}`;
     }
     const apiUrl = `${this.context.pageContext.web.absoluteUrl}/_api/web/lists/getbytitle('${listName}')/items?$select=Id,Title,activo,IMAGEN,PLANTA/Id,PLANTA/Title&$expand=PLANTA${filter}`;
 
@@ -997,6 +1056,7 @@ public async addUserInGroup(groupName: string, userEmail: string): Promise<any> 
         activo: piso.activo,
         IMAGEN: piso.IMAGEN,
         PLANTAId: piso.PlantaId, // SharePoint expects 'PLANTAId' for lookup field
+        idImgPiso: piso.idImgPiso // Campo adicional para la imagen del piso
       })
     };
 
@@ -1047,6 +1107,7 @@ public async addUserInGroup(groupName: string, userEmail: string): Promise<any> 
         activo: piso.activo,
         IMAGEN: piso.IMAGEN,
         PLANTAId: piso.PlantaId,
+        idImgPiso: piso.idImgPiso // Campo adicional para la imagen del piso
       })
     };
 
@@ -2218,6 +2279,42 @@ public async getQR(salaID:number = 1, pisoId:number = 1): Promise<string> {
       throw error;
     }
   }
+
+public async getItemsByDivision<T>(
+  listName: string, 
+  divisionId?: number, 
+  selectFields: string[] = ['*'], 
+  expandFields: string[] = []
+): Promise<T[]> {
+  try {
+    // Construimos la query base
+    let endpoint = `${this.context.pageContext.web.absoluteUrl}/_api/web/lists/getbytitle('${listName}')/items`;
+    
+    // Agregamos el filtro por División
+    // Asegúrate de que todas tus listas tengan la columna 'DivisionId' o cambia el nombre aquí
+    const filter = divisionId? `&$filter=PLANTAId eq ${divisionId}` : '';
+    const select = `?$select=${selectFields.join(',')}`;
+    const expand = expandFields.length > 0 ? `&$expand=${expandFields.join(',')}` : '';
+
+    //const url = `${endpoint}${filter}${select}${expand}`;
+    const url = `${endpoint}${select}${filter}${expand}`;
+
+    const response = await this.context.spHttpClient.get(
+      url,
+      SPHttpClient.configurations.v1
+    );
+
+    if (response.ok) {
+      const data = await response.json();
+      return data.value as T[]; // Aquí es donde ocurre la "magia" del genérico
+    } else {
+      throw new Error(`Error obteniendo items de la lista ${listName}`);
+    }
+  } catch (error) {
+    console.error("Error en getItemsByDivision:", error);
+    return [];
+  }
+}
 
   // CRUD operations for LM_PlanificacionHoras
   public async getPlanificacionHorasItems(): Promise<IPlanificacionHoraItem[]> {
