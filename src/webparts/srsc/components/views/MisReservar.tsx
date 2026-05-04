@@ -4,11 +4,11 @@ import { SPService } from '../../services/sp';
 import {IReportItem } from '../models/entities';
 import {   Dialog,DefaultButton,
   DialogType,
-  DialogFooter,DatePicker, PrimaryButton, Stack, Spinner, SpinnerSize, DetailsList, IColumn, SelectionMode, MessageBar, MessageBarType, Dropdown, IDropdownOption, IconButton } from '@fluentui/react';
+  DialogFooter,DatePicker, PrimaryButton, Stack, Spinner, SpinnerSize, DetailsList, IColumn, SelectionMode, MessageBar, MessageBarType, Dropdown, IDropdownOption, IconButton,TooltipHost } from '@fluentui/react';
 import styles from '../Srsc.module.scss';
 import { useSPFxContext } from '../../contexts/SPFxContext';
 import * as strings from 'SrscWebPartStrings';
-import { getRestrictedDates } from '../../utils/utils';
+import { getRestrictedDates,getReportColor } from '../../utils/utils';
 import {useAuth} from '../../contexts/AuthContext';
 
 const MisReservas: React.FC<IViewProps> = (props) => {
@@ -162,7 +162,27 @@ const MisReservas: React.FC<IViewProps> = (props) => {
         { key: 'column7', name: strings.EstadoColumn, fieldName: 'Estado', minWidth: 80, maxWidth: 100, isResizable: true, isMultiline: true }, // Added isMultiline
         { key: 'column8', name: strings.FechaCheckInColumn, fieldName: 'FechaCheckIn', minWidth: 120, maxWidth: 150, isResizable: true, isMultiline: true }, // Added isMultiline
         { key: 'column9', name: strings.FechaCheckOutColumn, fieldName: 'FechaCheckOut', minWidth: 120, maxWidth: 150, isResizable: true, isMultiline: true }, // Added isMultiline
-        { key: 'column10', name: strings.KPIColumn, fieldName: 'KPI', minWidth: 50, maxWidth: 80, isResizable: true, isMultiline: true }, // Added isMultiline
+        { 
+                    key: 'column10', 
+                    name: strings.KPIColumn, 
+                    fieldName: 'KPI', 
+                    minWidth: 50, 
+                    maxWidth: 50, 
+                    isResizable: true, 
+                    isMultiline: true,
+                    onRender:(item: any) => (
+                        <TooltipHost content={`Estado: ${item.Estado}`}>
+                            <div style={{
+                            width: '14px',
+                            height: '14px',
+                            borderRadius: '50%',
+                            backgroundColor: getReportColor(item.Estado), // Una función auxiliar que retorne el Hex
+                            //margin: '0 auto'
+                            }} />
+                        </TooltipHost>
+                    )
+            
+                },
         {
             key: 'column11',
             name: strings.VerColumn,
@@ -190,10 +210,11 @@ const MisReservas: React.FC<IViewProps> = (props) => {
             isResizable: false,
             onRender: (item: IReportItem) => (
                 <IconButton
-                    iconProps={{ iconName: 'Trash' }}
+                    iconProps={{ iconName: 'Delete' }}
                     title={strings.EliminarColumn}
                     ariaLabel={strings.EliminarColumn}
                     onClick={() => handleEliminarReserva(item)} // Implement this later if needed 
+                    hidden={item.Estado.toLowerCase() !== 'reservado'} // Only show delete button if status is "Reservado"
                 />
             ),
         }

@@ -2,11 +2,11 @@ import * as React from 'react';
 import { IViewProps } from './IViewProps';
 import { SPService } from '../../services/sp';
 import {IReportItem } from '../models/entities';
-import { DatePicker, PrimaryButton, Stack, Spinner, SpinnerSize, DetailsList, IColumn, SelectionMode, MessageBar, MessageBarType, Dropdown, IDropdownOption, IconButton } from '@fluentui/react';
+import { DatePicker, PrimaryButton, Stack, Spinner, SpinnerSize, DetailsList, IColumn, SelectionMode, MessageBar, MessageBarType, Dropdown, IDropdownOption, TooltipHost } from '@fluentui/react';
 import styles from '../Srsc.module.scss';
 import { useSPFxContext } from '../../contexts/SPFxContext';
 import * as strings from 'SrscWebPartStrings';
-import { getRestrictedDates } from '../../utils/utils';
+import { getReportColor, getRestrictedDates } from '../../utils/utils';
 
 const Reportes: React.FC<IViewProps> = () => {
     const context = useSPFxContext();
@@ -67,8 +67,28 @@ const Reportes: React.FC<IViewProps> = () => {
         { key: 'column7', name: strings.EstadoColumn, fieldName: 'Estado', minWidth: 80, maxWidth: 100, isResizable: true, isMultiline: true }, // Added isMultiline
         { key: 'column8', name: strings.FechaCheckInColumn, fieldName: 'FechaCheckIn', minWidth: 120, maxWidth: 150, isResizable: true, isMultiline: true }, // Added isMultiline
         { key: 'column9', name: strings.FechaCheckOutColumn, fieldName: 'FechaCheckOut', minWidth: 120, maxWidth: 150, isResizable: true, isMultiline: true }, // Added isMultiline
-        { key: 'column10', name: strings.KPIColumn, fieldName: 'KPI', minWidth: 50, maxWidth: 80, isResizable: true, isMultiline: true }, // Added isMultiline
-        {
+        { 
+            key: 'column10', 
+            name: strings.KPIColumn, 
+            fieldName: 'KPI', 
+            minWidth: 50, 
+            maxWidth: 80, 
+            isResizable: true, 
+            isMultiline: true,
+            onRender:(item: any) => (
+                <TooltipHost content={`Estado: ${item.Estado}`}>
+                    <div style={{
+                    width: '14px',
+                    height: '14px',
+                    borderRadius: '50%',
+                    backgroundColor: getReportColor(item.Estado), // Una función auxiliar que retorne el Hex
+                    //margin: '0 auto'
+                    }} />
+                </TooltipHost>
+            )
+    
+        }, // Added isMultiline
+        /*{
             key: 'column11',
             name: strings.VerColumn,
             fieldName: 'Ver',
@@ -84,7 +104,7 @@ const Reportes: React.FC<IViewProps> = () => {
                     disabled={true} // Disabled for now as per requirement
                 />
             ),
-        },
+        },*/
     ];
 
     const handleSearch = async (): Promise<void> => {

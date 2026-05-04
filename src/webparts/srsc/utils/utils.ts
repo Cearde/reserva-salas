@@ -37,6 +37,22 @@ export const getStatusColor = (disponibilidad: string): string => {
   }
 };
 
+export const getReportColor = (estado: string): string => {
+  switch (estado.toLowerCase()) {
+    case 'reservado':
+      return '#E74C3C'; 
+    case 'check-in': 
+      return '#27AE60'; 
+    case 'check-out':
+      return '#130ff1'; 
+    case 'anulada':
+      return '#800080';  
+    default:
+      return '#a19f9d';  
+  }
+};
+
+
 export const calcularPermisos = (isAdmin: boolean) => {
   return isAdmin ? 'Acceso Total' : 'Acceso Limitado';
 };
@@ -48,5 +64,5 @@ export const onFormatDate = (date?: Date): string => {
     const year = date.getFullYear();
     return `${day}-${month}-${year}`;
   };
-export const APP_VERSION = "2.7.0.3"; // Aquí pones la versión de tu package-solution
+export const APP_VERSION = "2.8.0.0"; // Aquí pones la versión de tu package-solution
 
