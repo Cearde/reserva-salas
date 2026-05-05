@@ -298,7 +298,7 @@ const MantenedorUsuarios: React.FC<IViewProps> = () => {
     { key: 'emailColumn', name: strings.EmailLabel, fieldName: 'email', minWidth: 150, isResizable: true, isMultiline: true },
     { key: 'division', name: strings.PisoPlantaLabel, fieldName: 'divisionTitle', minWidth: 80, isResizable: true, isMultiline: true },
    // { key: 'vpColumn', name: strings.GerenciaVicepresidenciaLabel, fieldName: 'VicepresidenciaTitle', minWidth: 150, isResizable: true, isMultiline: true },
-    { key: 'gColumn', name: strings.GerenciaLabel, fieldName: 'divisionTitle', minWidth: 150, isResizable: true },
+    { key: 'gColumn', name: strings.GerenciaLabel, fieldName: 'GerenciaTitle', minWidth: 150, isResizable: true },
     { key: 'esAdminColumn', name: strings.UsuarioROLLabel, fieldName: 'esAdmin', minWidth: 80, isResizable: true, onRender: (item: IUsuarioItem) => (item.esAdmin ? "Admin" : "Colaborador") },
     { key: 'activoColumn', name: strings.UsuarioActivoLabel, fieldName: 'activo', minWidth: 50, isResizable: true, onRender: (item: IUsuarioItem) => (item.activo ? strings.YesLabel : strings.NoLabel) },
     {

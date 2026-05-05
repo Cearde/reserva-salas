@@ -39,7 +39,7 @@ const MantenedorSalas: React.FC<IViewProps> = () => {
   const [pisos, setPisos] = React.useState<IDropdownOption[]>([]);
   const [plantas, setPlantas] = React.useState<IDropdownOption[]>([]); // New state for plantas
   const [loading, setLoading] = React.useState<boolean>(true);
-  const [error, setError] = React.useState<string | undefined>(undefined);
+ // const [error, setError] = React.useState<string | undefined>(undefined);
   const [message, setMessage] =  React.useState<{ type: MessageBarType, text: string } | undefined>(undefined);//React.useState<string | undefined>(undefined);
  // const [messageType, setMessageType] = React.useState<MessageBarType>(MessageBarType.info);
 
@@ -55,6 +55,7 @@ const MantenedorSalas: React.FC<IViewProps> = () => {
   const [selectedPlantaInModal, setSelectedPlantaInModal] = React.useState<number | undefined>(undefined);
   const [selectedPisoInModal, setSelectedPisoInModal] = React.useState<number | undefined>(undefined);
   const [floorImageUrl, setFloorImageUrl] = React.useState<string | undefined>(undefined);
+  const [salasByPiso, setSalasByPiso] = React.useState<ISalaItem[]>([]);
   const [imageDimensions, setImageDimensions] = React.useState<{ width: number; height: number } | undefined>(undefined);
   const [isImageLoading, setIsImageLoading] = React.useState<boolean>(false); // New state for image loading - Added comment to force re-evaluation
 
@@ -74,14 +75,14 @@ const MantenedorSalas: React.FC<IViewProps> = () => {
 
   const fetchSalas = React.useCallback(async () => {
     setLoading(true);
-    setError(undefined);
+    setMessage(undefined);
     try {
       const fetchedSalas = await spService.getSalas(filterPlantaId, true); // Fetch all (active/inactive) for mantenedor
       
       setSalas(fetchedSalas);
     } catch (err) {
       console.error("Error fetching salas:", err);
-      setError(strings.ErrorFetchingSalas);
+      setMessage({ type: MessageBarType.error, text: strings.ErrorFetchingSalas });
     } finally {
       setLoading(false);
     }
@@ -97,7 +98,7 @@ const MantenedorSalas: React.FC<IViewProps> = () => {
       setPlantas(fetchedPlantas);
     } catch (err) {
       console.error("Error fetching pisos:", err);
-      setError(strings.ErrorFetchingPisos);
+      setMessage({ type: MessageBarType.error, text: strings.ErrorFetchingPisos });
     }
   }, [spService]);
 
@@ -115,6 +116,7 @@ const MantenedorSalas: React.FC<IViewProps> = () => {
       const pisoOption = pisos.find(p => Number(p.key) === selectedPisoInModal);
       if (pisoOption && pisoOption.data && pisoOption.data.IMAGEN) {
         setFloorImageUrl(pisoOption.data.IMAGEN);
+        setSalasByPiso(salas.filter(sala => sala.PISOId === selectedPisoInModal));
       } else {
         setFloorImageUrl(undefined);
       }
@@ -192,7 +194,7 @@ const MantenedorSalas: React.FC<IViewProps> = () => {
     setFloorImageUrl(undefined);
     setImageDimensions(undefined);
     setIsModalOpen(true);
-    setError(undefined);
+    setMessage(undefined);
     setMessage(undefined);
     setSalaNameError(undefined);
     setSalaPisoError(undefined);
@@ -207,7 +209,7 @@ const MantenedorSalas: React.FC<IViewProps> = () => {
     // floorImageUrl will be set by the useEffect when selectedPisoInModal changes
     setImageDimensions(undefined);
     setIsModalOpen(true);
-    setError(undefined);
+    setMessage(undefined);
     setMessage(undefined);
     setSalaNameError(undefined);
     setSalaPisoError(undefined);
@@ -290,7 +292,7 @@ const MantenedorSalas: React.FC<IViewProps> = () => {
               fetchSalas();
           } catch (err) {
               const msg = err instanceof Error ? err.message : String(err);
-              setError(strings.ErrorDeletingSala + " " + msg);
+              setMessage({ type: MessageBarType.error, text: strings.ErrorDeletingSala + " " + msg });
               console.error("Error deleting sala:", err);
           } finally {
               setShowDeleteConfirm(false);
@@ -314,7 +316,6 @@ const MantenedorSalas: React.FC<IViewProps> = () => {
     const salaToSave: ISPSalaItem = currentSala; // Ensure currentSala is treated as ISPSalaItem
 
     setLoading(true);
-    setError(undefined);
     setMessage(undefined);
 
     try {
@@ -335,7 +336,7 @@ const MantenedorSalas: React.FC<IViewProps> = () => {
     } catch (err) {
       console.error("Error saving sala:", err);
       const msg = err instanceof Error ? err.message : String(err);
-      setError((currentSala?.Id ? strings.ErrorUpdatingSala : strings.ErrorAddingSala) + " " + msg);
+      setMessage({ type: MessageBarType.error, text: (currentSala?.Id ? strings.ErrorUpdatingSala : strings.ErrorAddingSala) + " " + msg });
       //setMessageType(MessageBarType.error);
     } finally {
       setLoading(false);
@@ -346,7 +347,7 @@ const MantenedorSalas: React.FC<IViewProps> = () => {
     setIsModalOpen(false);
     setShowDeleteConfirm(false);
     setCurrentSala(undefined);
-    setError(undefined);
+    setMessage(undefined);
     setMessage(undefined);
     setSalaNameError(undefined);
     setSalaPisoError(undefined);
@@ -447,8 +448,8 @@ const MantenedorSalas: React.FC<IViewProps> = () => {
       <h2>{strings.MantenedorSalasTitle}</h2>
 
       {loading && <Spinner size={SpinnerSize.large} label={strings.LoadingSalas} />}
-      {error && <MessageBar messageBarType={MessageBarType.error}>{error}</MessageBar>}
-      {message && !error && <MessageBar messageBarType={message.type} onDismiss={() => setMessage(undefined)}>{message.text}</MessageBar>}
+      
+      {message && <MessageBar messageBarType={message.type} onDismiss={() => setMessage(undefined)}>{message.text}</MessageBar>}
 
       <Stack horizontal horizontalAlign="space-between" verticalAlign="center" style={{ marginBottom: 15 }}>
         <PrimaryButton iconProps={{ iconName: 'Add' }} onClick={handleAddClick}>
@@ -464,11 +465,11 @@ const MantenedorSalas: React.FC<IViewProps> = () => {
        
       </Stack>
 
-      {!loading && !error && salas.length === 0 && (
+      {!loading  && salas.length === 0 && (
         <MessageBar messageBarType={MessageBarType.info}>{strings.NoSalasFound}</MessageBar>
       )}
 
-      {!loading && !error && salas.length > 0 && (
+      {!loading  && salas.length > 0 && (
         <DetailsList
           items={salas}
           columns={columns}
@@ -497,7 +498,6 @@ const MantenedorSalas: React.FC<IViewProps> = () => {
         ) }
         <Stack tokens={{ childrenGap: 15 }}>
           <div style={{ maxWidth: '300px' }}>
-            {error && <MessageBar messageBarType={MessageBarType.error}>{error}</MessageBar>}
             <TextField
               label={strings.SalaNameLabel}
               value={currentSala?.Title || ''}
@@ -590,7 +590,7 @@ const MantenedorSalas: React.FC<IViewProps> = () => {
                   }}
                 />
  
-                {salas.map(sala => (
+                {salasByPiso.map(sala => (
                   <PrimaryButton
                     key={sala.Id}
                     text={sala.Title}
